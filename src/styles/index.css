@@ -14,6 +14,7 @@ body {
   text-rendering: optimizeLegibility;
   -moz-osx-font-smoothing: grayscale;
   -webkit-font-smoothing: antialiased;
+  background-color: #FFF8F0; /* 新增背景色（Tailwind 的 slate-50） */
 }
 
 iframe {
@@ -23,6 +24,6 @@ iframe {
 hr {
   border-top: none;
   border-bottom: 1px solid;
-  border-color: #0003;
+  border-color: #FFA630;
   margin: 2rem 0;
 }

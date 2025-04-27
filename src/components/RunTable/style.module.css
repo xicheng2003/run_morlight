@@ -22,11 +22,11 @@
   width: 100%;
   font-variant: tabular-nums;
   margin: 2rem 0 5rem 0;
-  color: rgb(204, 204, 204);
-  background-color: rgb(26, 26, 26);
+  color: #2D2D2D;
+  background-color: #FFF8F0;
 
   :is(thead) {
-    color: rgb(204, 204, 204);
+    color: #2D2D2D;
     text-align: right;
 
     :is(th) {
@@ -53,7 +53,7 @@
 }
 
 .selected {
-  color: rgb(224, 237, 94);
+  color: #FFA630;
 }
 
 .tableContainer {
@@ -62,5 +62,5 @@
 }
 
 .runDate {
-  color: rgb(204, 204, 204);
+  color: rgb(26, 26, 26);
 }
