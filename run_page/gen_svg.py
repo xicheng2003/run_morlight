@@ -121,14 +121,15 @@ def main():
         "--special-color",
         dest="special_color",
         metavar="COLOR",
-        default="#FFFF00",
+        default="#b58900",
         help='Special track color (default: "#FFFF00").',
     )
     args_parser.add_argument(
         "--special-color2",
         dest="special_color2",
         metavar="COLOR",
-        help="Secondary color of special tracks (default: none).",
+        default="#dc322f",
+        help='Secondary color of special tracks (default: "#DC322F").',
     )
     args_parser.add_argument(
         "--units",
