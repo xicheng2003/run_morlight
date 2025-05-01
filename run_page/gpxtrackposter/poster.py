@@ -112,9 +112,9 @@ class Poster:
         if self.drawer_type == "plain":
             height = height - 100
             self.colors["background"] = "#FFF8F0"
-            self.colors["track"] = "#dc322f"
+            self.colors["track"] = "rgb(255,153,51)"
             self.colors["special"] = "#b58900"
-            self.colors["text"] = "#e1ed5e"
+            self.colors["text"] = "#2D2D2D"
         d = svgwrite.Drawing(output, (f"{width}mm", f"{height}mm"))
         d.viewbox(0, 0, self.width, height)
         d.add(d.rect((0, 0), (width, height), fill=self.colors["background"]))
