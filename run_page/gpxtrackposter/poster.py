@@ -112,7 +112,7 @@ class Poster:
         if self.drawer_type == "plain":
             height = height - 100
             self.colors["background"] = "#FFF8F0"
-            self.colors["track"] = "rgb(255,153,51)"
+            self.colors["track"] = "#FF9933"
             self.colors["special"] = "#b58900"
             self.colors["text"] = "#2D2D2D"
         d = svgwrite.Drawing(output, (f"{width}mm", f"{height}mm"))
