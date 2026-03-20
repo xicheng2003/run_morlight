@@ -1,13 +1,14 @@
-import MapboxLanguage from '@mapbox/mapbox-gl-language';
-import React, {useRef, useCallback, useState, useEffect} from 'react';
+import React, {useRef, useCallback, useState, useEffect, useMemo} from 'react';
 import Map, {Layer, Source, FullscreenControl, NavigationControl, MapRef} from 'react-map-gl';
-import {MapInstance} from "react-map-gl/src/types/lib";
+import maplibregl from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
 import useActivities from '@/hooks/useActivities';
 import {
   MAP_LAYER_LIST,
   IS_CHINESE,
   ROAD_LABEL_DISPLAY,
-  MAPBOX_TOKEN,
+  MAPTILER_KEY,
+  MAP_STYLE,
   PROVINCE_FILL_COLOR,
   COUNTRY_FILL_COLOR,
   USE_DASH_LINE,
@@ -21,7 +22,6 @@ import RunMarker from './RunMarker';
 import RunMapButtons from './RunMapButtons';
 import styles from './style.module.css';
 import { FeatureCollection } from 'geojson';
-import { RPGeometry } from '@/static/run_countries';
 import './mapbox.css';
 import LightsControl from "@/components/RunMap/LightsControl";
 
@@ -30,7 +30,7 @@ interface IRunMapProps {
   viewState: IViewState;
   setViewState: (_viewState: IViewState) => void;
   changeYear: (_year: string) => void;
-  geoData: FeatureCollection<RPGeometry>;
+  geoData: FeatureCollection<any>;
   thisYear: string;
 }
 
@@ -45,78 +45,103 @@ const RunMap = ({
   const { countries, provinces } = useActivities();
   const mapRef = useRef<MapRef>();
   const [lights, setLights] = useState(PRIVACY_MODE ? false : LIGHTS_ON);
-  const keepWhenLightsOff = ['runs2']
-  function switchLayerVisibility(map: MapInstance, lights: boolean) {
-    const styleJson = map.getStyle();
-    styleJson.layers.forEach((it: { id: string; }) => {
-      if (!keepWhenLightsOff.includes(it.id)) {
-        if (lights)
-          map.setLayoutProperty(it.id, 'visibility', 'visible');
-        else
-          map.setLayoutProperty(it.id, 'visibility', 'none');
-      }
-    })
-  }
+  const [mapError, setMapError] = useState<string | null>(null);
+
+  const isDefaultKey = MAPTILER_KEY === 'get-your-key-at-maptiler.com';
+
+  const keepWhenLightsOff = useMemo(() => ['runs2'], []);
+
+  const switchLayerVisibility = useCallback((map: any, lightsOn: boolean) => {
+    try {
+      const style = map.getStyle();
+      if (!style || !style.layers) return;
+      style.layers.forEach((layer: any) => {
+        if (!keepWhenLightsOff.includes(layer.id)) {
+          map.setLayoutProperty(layer.id, 'visibility', lightsOn ? 'visible' : 'none');
+        }
+      });
+    } catch (e) {
+      console.warn('Failed to switch layer visibility', e);
+    }
+  }, [keepWhenLightsOff]);
+
   const mapRefCallback = useCallback(
     (ref: MapRef) => {
       if (ref !== null) {
         const map = ref.getMap();
-        if (map && IS_CHINESE) {
-            map.addControl(new MapboxLanguage({defaultLanguage: 'zh-Hans'}));
-        }
-        // all style resources have been downloaded
-        // and the first visually complete rendering of the base style has occurred.
         map.on('style.load', () => {
           if (!ROAD_LABEL_DISPLAY) {
             MAP_LAYER_LIST.forEach((layerId) => {
-              map.removeLayer(layerId);
+              if (map.getLayer(layerId)) {
+                map.removeLayer(layerId);
+              }
             });
           }
           mapRef.current = ref;
           switchLayerVisibility(map, lights);
         });
       }
-      if (mapRef.current) {
-        const map = mapRef.current.getMap();
-        switchLayerVisibility(map, lights);
-      }
     },
-    [mapRef, lights]
+    [lights, switchLayerVisibility]
   );
-  const filterProvinces = provinces.slice();
-  const filterCountries = countries.slice();
-  // for geojson format
-  filterProvinces.unshift('in', 'name');
-  filterCountries.unshift('in', 'name');
 
-  const initGeoDataLength = geoData.features.length;
-  const isBigMap = (viewState.zoom ?? 0) <= 3;
-  if (isBigMap && IS_CHINESE) {
-    // Show boundary and line together, combine geoData(only when not combine yet)
-    if(geoData.features.length === initGeoDataLength){
-      geoData = {
-          "type": "FeatureCollection",
-          "features": geoData.features.concat(geoJsonForMap().features)
+  useEffect(() => {
+    if (mapRef.current) {
+      switchLayerVisibility(mapRef.current.getMap(), lights);
+    }
+  }, [lights, switchLayerVisibility]);
+
+  const filterProvinces = useMemo(() => {
+    const p = provinces.slice();
+    p.unshift('in', 'name');
+    return p;
+  }, [provinces]);
+
+  const filterCountries = useMemo(() => {
+    const c = countries.slice();
+    c.unshift('in', 'name');
+    return c;
+  }, [countries]);
+
+  const mergedGeoData = useMemo(() => {
+    const isBigMap = (viewState.zoom ?? 0) <= 3;
+    if (isBigMap && IS_CHINESE) {
+      return {
+        ...geoData,
+        features: geoData.features.concat(geoJsonForMap().features)
       };
     }
-  }
+    return geoData;
+  }, [geoData, viewState.zoom]);
 
-  const isSingleRun =
-    geoData.features.length === 1 &&
-    geoData.features[0].geometry.coordinates.length;
-  let startLon = 0;
-  let startLat = 0;
-  let endLon = 0;
-  let endLat = 0;
-  if (isSingleRun) {
-    const points = geoData.features[0].geometry.coordinates as Coordinate[];
-    [startLon, startLat] = points[0];
-    [endLon, endLat] = points[points.length - 1];
-  }
-  let dash = USE_DASH_LINE && !isSingleRun && !isBigMap ? [2, 2] : [2, 0];
-  const onMove = React.useCallback(({ viewState }: { viewState: IViewState }) => {
+  const isSingleRun = useMemo(() => 
+    mergedGeoData.features.length === 1 &&
+    mergedGeoData.features[0].geometry.type === 'LineString' &&
+    mergedGeoData.features[0].geometry.coordinates.length > 0
+  , [mergedGeoData]);
+
+  const startEndPoints = useMemo(() => {
+    if (isSingleRun) {
+      const points = mergedGeoData.features[0].geometry.coordinates as Coordinate[];
+      return {
+        startLon: points[0][0],
+        startLat: points[0][1],
+        endLon: points[points.length - 1][0],
+        endLat: points[points.length - 1][1],
+      };
+    }
+    return null;
+  }, [isSingleRun, mergedGeoData]);
+
+  const dash = useMemo(() => {
+    const isBigMap = (viewState.zoom ?? 0) <= 3;
+    return USE_DASH_LINE && !isSingleRun && !isBigMap ? [2, 2] : [2, 0];
+  }, [viewState.zoom, isSingleRun]);
+
+  const onMove = useCallback(({ viewState }: { viewState: IViewState }) => {
     setViewState(viewState);
-  }, []);
+  }, [setViewState]);
+
   const style: React.CSSProperties = {
     width: '100%',
     height: MAP_HEIGHT,
@@ -140,64 +165,92 @@ const RunMap = ({
     };
   }, []);
 
+  const onMapError = useCallback((e: any) => {
+    console.error('MapLibre error:', e);
+    setMapError(e.error?.message || 'Failed to load map');
+  }, []);
+
   return (
-    <Map
-      {...viewState}
-      onMove={onMove}
-      style={style}
-      mapStyle="mapbox://styles/mapbox/dark-v10"
-      ref={mapRefCallback}
-      mapboxAccessToken={MAPBOX_TOKEN}
-    >
-      <RunMapButtons changeYear={changeYear} thisYear={thisYear} />
-      <Source id="data" type="geojson" data={geoData}>
-        <Layer
-          id="province"
-          type="fill"
-          paint={{
-            'fill-color': PROVINCE_FILL_COLOR,
-          }}
-          filter={filterProvinces}
-        />
-        <Layer
-          id="countries"
-          type="fill"
-          paint={{
-            'fill-color': COUNTRY_FILL_COLOR,
-            // in China, fill a bit lighter while already filled provinces
-            'fill-opacity': ["case", ["==", ["get", "name"], '中国'], 0.1, 0.5],
-          }}
-          filter={filterCountries}
-        />
-        <Layer
-          id="runs2"
-          type="line"
-          paint={{
-            'line-color':  ['get', 'color'],
-            'line-width': isBigMap && lights ? 1 : 2,
-            'line-dasharray': dash,
-            'line-opacity': isSingleRun || isBigMap || !lights ? 1 : LINE_OPACITY,
-            'line-blur': 1,
-          }}
-          layout={{
-            'line-join': 'round',
-            'line-cap': 'round',
-          }}
-        />
-      </Source>
-      {isSingleRun && (
-        <RunMarker
-          startLat={startLat}
-          startLon={startLon}
-          endLat={endLat}
-          endLon={endLon}
-        />
+    <div className="relative w-full overflow-hidden rounded-lg shadow-lg">
+      <Map
+        {...viewState}
+        onMove={onMove}
+        style={style}
+        mapLib={maplibregl}
+        mapStyle={MAP_STYLE}
+        ref={mapRefCallback}
+        onError={onMapError}
+      >
+        <RunMapButtons changeYear={changeYear} thisYear={thisYear} />
+        <Source id="data" type="geojson" data={mergedGeoData}>
+          <Layer
+            id="province"
+            type="fill"
+            paint={{
+              'fill-color': PROVINCE_FILL_COLOR,
+            }}
+            filter={filterProvinces}
+          />
+          <Layer
+            id="countries"
+            type="fill"
+            paint={{
+              'fill-color': COUNTRY_FILL_COLOR,
+              'fill-opacity': ["case", ["==", ["get", "name"], '中国'], 0.1, 0.5],
+            }}
+            filter={filterCountries}
+          />
+          <Layer
+            id="runs2"
+            type="line"
+            paint={{
+              'line-color':  ['get', 'color'],
+              'line-width': (viewState.zoom ?? 0) <= 3 && lights ? 1 : 2,
+              'line-dasharray': dash as any,
+              'line-opacity': isSingleRun || (viewState.zoom ?? 0) <= 3 || !lights ? 1 : LINE_OPACITY,
+              'line-blur': 1,
+            }}
+            layout={{
+              'line-join': 'round',
+              'line-cap': 'round',
+            }}
+          />
+        </Source>
+        {startEndPoints && (
+          <RunMarker
+            startLat={startEndPoints.startLat}
+            startLon={startEndPoints.startLon}
+            endLat={startEndPoints.endLat}
+            endLon={startEndPoints.endLon}
+          />
+        )}
+        <span className={styles.runTitle}>{title}</span>
+        <FullscreenControl style={fullscreenButton}/>
+        {!PRIVACY_MODE && <LightsControl setLights={setLights} lights={lights}/>}
+        <NavigationControl showCompass={false} position={'bottom-right'} style={{opacity: 0.3}}/>
+      </Map>
+      
+      {(isDefaultKey || mapError) && (
+        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/80 p-8 text-center text-white backdrop-blur-sm">
+          <h3 className="mb-4 text-xl font-bold text-orange-400">
+            {mapError ? 'Map Loading Error' : 'MapTiler Key Required'}
+          </h3>
+          <p className="mb-6 max-w-md text-sm text-gray-300">
+            {mapError ? `Error: ${mapError}` : 'To display the map, please register for a free account at maptiler.com and put your API key in src/utils/const.ts.'}
+          </p>
+          <div className="flex gap-4">
+            <a 
+              href="https://www.maptiler.com/cloud/" 
+              target="_blank" 
+              rel="noreferrer"
+              className="rounded bg-orange-600 px-4 py-2 text-sm font-medium hover:bg-orange-700 transition-colors"
+            >
+              Get Free Key
+            </a>
+          </div>
+        </div>
       )}
-      <span className={styles.runTitle}>{title}</span>
-      <FullscreenControl style={fullscreenButton}/>
-      {!PRIVACY_MODE && <LightsControl setLights={setLights} lights={lights}/>}
-      <NavigationControl showCompass={false} position={'bottom-right'} style={{opacity: 0.3}}/>
-    </Map>
+    </div>
   );
 };
 

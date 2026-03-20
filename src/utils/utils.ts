@@ -28,6 +28,11 @@ export interface Activity {
   streak: number;
 }
 
+export interface ProcessedActivity extends Activity {
+  path: Coordinate[];
+  color: string;
+}
+
 const titleForShow = (run: Activity): string => {
   const date = run.start_date_local.slice(0, 11);
   const distance = (run.distance / 1000.0).toFixed(2);
@@ -237,8 +242,8 @@ const colorForRun = (run: Activity): string => {
 const geoJsonForRuns = (runs: Activity[]): FeatureCollection<LineString> => ({
   type: 'FeatureCollection',
   features: runs.map((run) => {
-    const points = pathForRun(run);
-    const color = colorForRun(run);
+    const points = (run as ProcessedActivity).path || pathForRun(run);
+    const color = (run as ProcessedActivity).color || colorForRun(run);
     return {
       type: 'Feature',
       properties: {
@@ -411,6 +416,7 @@ export {
   locationForRun,
   intComma,
   pathForRun,
+  colorForRun,
   geoJsonForRuns,
   geoJsonForMap,
   titleForRun,

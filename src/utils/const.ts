@@ -1,9 +1,6 @@
 // const
-const MAPBOX_TOKEN =
-  // For security reasons, please avoid using the default public token provided by Mapbox as much as possible.
-  // Instead, manually add a new token and apply URL restrictions.
-  // (please refer to https://github.com/yihong0618/running_page/issues/643#issuecomment-2042668580)
-  'pk.eyJ1IjoieWlob25nMDYxOCIsImEiOiJja2J3M28xbG4wYzl0MzJxZm0ya2Fua2p2In0.PNKfkeQwYuyGOTT_x9BJ4Q';
+const MAPTILER_KEY = 'odrNKyXlNhi0YbvBPcMm';
+const MAP_STYLE = `https://api.maptiler.com/maps/ch-swisstopo-lbm-dark/style.json?key=${MAPTILER_KEY}`;
 const MUNICIPALITY_CITIES_ARR = [
   '北京市',
   '上海市',
@@ -42,8 +39,9 @@ const ROAD_LABEL_DISPLAY = true;
 //set to `true` if you want to display only the routes without showing the map.
 const PRIVACY_MODE = false;
 // update for now 2024/11/17 the lights on default is false
-//set to `false` if you want to make light off as default, only effect when `PRIVACY_MODE` = false
-const LIGHTS_ON =false;
+// styling: set to `false` if you want to make light off as default, only effect when `PRIVACY_MODE` = false
+const LIGHTS_ON = true;
+
 //set to `true` if you want to show the 'Elevation Gain' column
 const SHOW_ELEVATION_GAIN = false;
 // richer title for the activity types (like garmin style)
@@ -111,17 +109,17 @@ const RUN_TITLES = {
   NIGHT_RUN_TITLE,
 };
 const ACTIVITY_TOTAL = {
-    ACTIVITY_COUNT_TITLE,
-    MAX_DISTANCE_TITLE,
-    MAX_SPEED_TITLE,
-    TOTAL_TIME_TITLE,
-    AVERAGE_SPEED_TITLE,
-    TOTAL_DISTANCE_TITLE,
-    YEARLY_TITLE,
-    MONTHLY_TITLE,
-    WEEKLY_TITLE,
-    DAILY_TITLE,
-    LOCATION_TITLE
+  ACTIVITY_COUNT_TITLE,
+  MAX_DISTANCE_TITLE,
+  MAX_SPEED_TITLE,
+  TOTAL_TIME_TITLE,
+  AVERAGE_SPEED_TITLE,
+  TOTAL_DISTANCE_TITLE,
+  YEARLY_TITLE,
+  MONTHLY_TITLE,
+  WEEKLY_TITLE,
+  DAILY_TITLE,
+  LOCATION_TITLE
 };
 
 export {
@@ -129,7 +127,8 @@ export {
   GOOGLE_ANALYTICS_TRACKING_ID,
   CHINESE_LOCATION_INFO_MESSAGE_FIRST,
   CHINESE_LOCATION_INFO_MESSAGE_SECOND,
-  MAPBOX_TOKEN,
+  MAPTILER_KEY,
+  MAP_STYLE,
   MUNICIPALITY_CITIES_ARR,
   MAP_LAYER_LIST,
   IS_CHINESE,

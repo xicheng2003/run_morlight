@@ -157,7 +157,7 @@ const ActivityList: React.FC = () => {
         return hours * 3600 + minutes * 60 + seconds;
     };
 
-    const groupActivities = (interval: IntervalType): ActivityGroups => {
+    const activitiesByInterval = React.useMemo(() => {
         return (activities as Activity[]).filter(filterActivities).reduce((acc: ActivityGroups, activity) => {
             const date = new Date(activity.start_date_local);
             let key: string;
@@ -216,9 +216,7 @@ const ActivityList: React.FC = () => {
 
             return acc;
         }, {});
-    };
-
-    const activitiesByInterval = groupActivities(interval);
+    }, [interval]);
 
     return (
         <div className={styles.activityList}>

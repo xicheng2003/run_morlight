@@ -1,5 +1,15 @@
-import { locationForRun, titleForRun } from '@/utils/utils';
-import activities from '@/static/activities.json';
+import { locationForRun, titleForRun, pathForRun, colorForRun, ProcessedActivity } from '@/utils/utils';
+import activitiesData from '@/static/activities.json';
+
+const activities = (activitiesData as any[]).map((run) => {
+  const path = pathForRun(run);
+  const color = colorForRun(run);
+  return {
+    ...run,
+    path,
+    color,
+  } as ProcessedActivity;
+});
 
 const useActivities = () => {
   const cities: Record<string, number> = {};
