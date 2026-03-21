@@ -35,6 +35,15 @@ const LINE_OPACITY = 0.4;
 const MAP_HEIGHT = 600;
 //set to `false` if you want to hide the road label characters
 const ROAD_LABEL_DISPLAY = true;
+
+// Customizable latest race event for the Bio section
+export const LATEST_RACE_EVENT = {
+  name: '梅州马拉松',
+  type: '半程马拉松',
+  pace: "5'51\"",
+  date: '2025.12.28',
+};
+
 // update for now 2024/11/17 the privacy mode is true
 //set to `true` if you want to display only the routes without showing the map.
 const PRIVACY_MODE = false;

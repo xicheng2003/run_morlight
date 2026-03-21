@@ -1,14 +1,8 @@
-import React, { lazy, useState, Suspense } from 'react';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } from 'recharts';
 import activities from '@/static/activities.json';
-import styles from './style.module.css';
-import { ACTIVITY_TOTAL } from "@/utils/const";
-import { formatPace } from '@/utils/utils';
-import { totalStat } from '@assets/index';
-import { loadSvgComponent } from '@/utils/svgUtils';
-
-const MonthofLifeSvg = lazy(() => loadSvgComponent(totalStat, './mol.svg'));
+import { ACTIVITY_TOTAL, IS_CHINESE } from "@/utils/const";
+import MonthOfLife from '../Charts/MonthOfLife';
 
 // Define interfaces for our data structures
 interface Activity {
@@ -61,88 +55,125 @@ const ActivityCard: React.FC<ActivityCardProps> = ({ period, summary, dailyDista
     const generateLabels = (): number[] => {
         if (interval === 'month') {
             const [year, month] = period.split('-').map(Number);
-            const daysInMonth = new Date(year, month, 0).getDate(); // Get the number of days in the month
+            const daysInMonth = new Date(year, month, 0).getDate();
             return Array.from({ length: daysInMonth }, (_, i) => i + 1);
         } else if (interval === 'week') {
             return Array.from({ length: 7 }, (_, i) => i + 1);
         } else if (interval === 'year') {
-            return Array.from({ length: 12 }, (_, i) => i + 1); // Generate months 1 to 12
+            return Array.from({ length: 12 }, (_, i) => i + 1);
         }
         return [];
     };
 
     const data: ChartData[] = generateLabels().map((day) => ({
         day,
-        distance: (dailyDistances[day - 1] || 0).toFixed(2), // Keep two decimal places
+        distance: (dailyDistances[day - 1] || 0).toFixed(2),
     }));
 
     const formatTime = (seconds: number): string => {
         const h = Math.floor(seconds / 3600);
         const m = Math.floor((seconds % 3600) / 60);
         const s = Math.floor(seconds % 60);
-        return `${h}h ${m}m ${s}s`;
+        if (h > 0) return `${h}h ${m}m ${s}s`;
+        return `${m}m ${s}s`;
     };
 
-    const formatPace = (speed: number): string => {
-        if (speed === 0) return '0:00 min/km';
-        const pace = 60 / speed; // min/km
-        const totalSeconds = Math.round(pace * 60); // Total seconds per km
+    const formatPaceStr = (speed: number): string => {
+        if (speed === 0) return '0:00 /km';
+        const pace = 60 / speed;
+        const totalSeconds = Math.round(pace * 60);
         const minutes = Math.floor(totalSeconds / 60);
         const seconds = totalSeconds % 60;
-        return `${minutes}:${seconds < 10 ? '0' : ''}${seconds} min/km`;
+        return `${minutes}'${seconds < 10 ? '0' : ''}${seconds}"`;
     };
 
-    // Calculate Y-axis maximum value and ticks
-    const yAxisMax = Math.ceil(Math.max(...data.map(d => parseFloat(d.distance))) + 10); // Round up and add buffer
-    const yAxisTicks = Array.from({ length: Math.ceil(yAxisMax / 5) + 1 }, (_, i) => i * 5); // Generate arithmetic sequence
+    const yAxisMax = Math.ceil(Math.max(...data.map(d => parseFloat(d.distance))) + 5);
+    const yAxisTicks = Array.from({ length: Math.ceil(yAxisMax / 5) + 1 }, (_, i) => i * 5);
 
     return (
-        <div className={styles.activityCard}>
-            <h2 className={styles.activityName}>{period}</h2>
-            <div className={styles.activityDetails}>
-                <p><strong>{ACTIVITY_TOTAL.TOTAL_DISTANCE_TITLE}:</strong> {summary.totalDistance.toFixed(2)} km</p>
-                <p><strong>{ACTIVITY_TOTAL.AVERAGE_SPEED_TITLE}:</strong> {formatPace(summary.averageSpeed)}</p>
-                <p><strong>{ACTIVITY_TOTAL.TOTAL_TIME_TITLE}:</strong> {formatTime(summary.totalTime)}</p>
-                {interval !== 'day' && (
+        <div className="group rounded-[2.5rem] bg-white/[0.02] border border-white/5 p-8 backdrop-blur-xl transition-all duration-500 hover:bg-white/[0.04] hover:-translate-y-2 hover:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.5)]">
+            <header className="mb-8 flex items-end justify-between">
+                <h2 className="text-3xl font-black italic uppercase tracking-tighter text-brand">{period}</h2>
+                <div className="h-px flex-1 bg-gradient-to-r from-brand/20 to-transparent mx-6 mb-2 hidden sm:block" />
+            </header>
+            
+            <div className="grid grid-cols-2 gap-y-6 gap-x-4 mb-8">
+                <div className="flex flex-col gap-1">
+                    <span className="text-[9px] font-black uppercase tracking-widest text-white/30">{ACTIVITY_TOTAL.TOTAL_DISTANCE_TITLE}</span>
+                    <span className="text-2xl font-black italic text-white/90">{summary.totalDistance.toFixed(1)} <span className="text-xs font-bold text-white/40 not-italic">KM</span></span>
+                </div>
+                <div className="flex flex-col gap-1">
+                    <span className="text-[9px] font-black uppercase tracking-widest text-white/30">{ACTIVITY_TOTAL.AVERAGE_SPEED_TITLE}</span>
+                    <span className="text-2xl font-black italic text-white/90">{formatPaceStr(summary.averageSpeed)}</span>
+                </div>
+                <div className="flex flex-col gap-1">
+                    <span className="text-[9px] font-black uppercase tracking-widest text-white/30">{ACTIVITY_TOTAL.TOTAL_TIME_TITLE}</span>
+                    <span className="text-xl font-bold italic text-white/70">{formatTime(summary.totalTime)}</span>
+                </div>
+                
+                {interval !== 'day' ? (
                     <>
-                        <p><strong>{ACTIVITY_TOTAL.ACTIVITY_COUNT_TITLE}:</strong> {summary.count}</p>
-                        <p><strong>{ACTIVITY_TOTAL.MAX_DISTANCE_TITLE}:</strong> {summary.maxDistance.toFixed(2)} km</p>
-                        <p><strong>{ACTIVITY_TOTAL.MAX_SPEED_TITLE}:</strong> {formatPace(summary.maxSpeed)}</p>
+                        <div className="flex flex-col gap-1">
+                            <span className="text-[9px] font-black uppercase tracking-widest text-white/30">{ACTIVITY_TOTAL.ACTIVITY_COUNT_TITLE}</span>
+                            <span className="text-xl font-bold italic text-white/70">{summary.count} <span className="text-[10px] font-bold text-white/30 not-italic uppercase">Runs</span></span>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                            <span className="text-[9px] font-black uppercase tracking-widest text-white/30">{ACTIVITY_TOTAL.MAX_DISTANCE_TITLE}</span>
+                            <span className="text-xl font-bold italic text-white/70">{summary.maxDistance.toFixed(1)} <span className="text-[10px] font-bold text-white/30 not-italic uppercase">KM</span></span>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                            <span className="text-[9px] font-black uppercase tracking-widest text-white/30">{ACTIVITY_TOTAL.MAX_SPEED_TITLE}</span>
+                            <span className="text-xl font-bold italic text-white/70">{formatPaceStr(summary.maxSpeed)}</span>
+                        </div>
                     </>
-                )}
-                {interval === 'day' && (
-                    <p><strong>{ACTIVITY_TOTAL.LOCATION_TITLE}:</strong> {summary.location || ''}</p>
-                )}
-                {['month', 'week', 'year'].includes(interval) && (
-                    <div className={styles.chart} style={{ height: '250px', width: '100%' }}>
-                        <ResponsiveContainer>
-                            <BarChart data={data} margin={{ top: 20, right: 20, left: -20, bottom: 5 }}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                                <XAxis dataKey="day" tick={{ fill: 'rgb(100, 100, 100)' }} />
-                                <YAxis
-                                    label={{ value: 'km', angle: -90, position: 'insideLeft', fill: 'rgb(204, 204, 204)' }}
-                                    domain={[0, yAxisMax]}
-                                    ticks={yAxisTicks}
-                                    tick={{ fill: 'rgb(100, 100, 100)' }}
-                                />
-                                <Tooltip
-                                    formatter={(value) => `${value} km`}
-                                    contentStyle={{ backgroundColor: 'rgb(36, 36, 36)', border: '1px solid #444', color: 'rgb(204, 204, 204)' }}
-                                    labelStyle={{ color: '#ffa630' }}
-                                />
-                                <Bar dataKey="distance" fill="#ffa630" />
-                            </BarChart>
-                        </ResponsiveContainer>
+                ) : (
+                    <div className="flex flex-col gap-1 col-span-2">
+                        <span className="text-[9px] font-black uppercase tracking-widest text-white/30">{ACTIVITY_TOTAL.LOCATION_TITLE}</span>
+                        <span className="text-lg font-bold text-white/70">{summary.location || '--'}</span>
                     </div>
                 )}
             </div>
+
+            {['month', 'week', 'year'].includes(interval) && (
+                <div className="h-[200px] w-full mt-6 pt-6 border-t border-white/5">
+                    <ResponsiveContainer>
+                        <BarChart data={data} margin={{ top: 10, right: 0, left: -25, bottom: 0 }}>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
+                            <XAxis 
+                                dataKey="day" 
+                                axisLine={false}
+                                tickLine={false}
+                                tick={{ fill: 'rgba(255, 255, 255, 0.2)', fontSize: 10 }} 
+                            />
+                            <YAxis
+                                axisLine={false}
+                                tickLine={false}
+                                domain={[0, yAxisMax]}
+                                ticks={yAxisTicks}
+                                tick={{ fill: 'rgba(255, 255, 255, 0.2)', fontSize: 10 }}
+                            />
+                            <Tooltip
+                                cursor={{ fill: 'rgba(255,255,255,0.02)' }}
+                                formatter={(value: any) => [`${value} KM`, '里程']}
+                                contentStyle={{ backgroundColor: 'rgba(0,0,0,0.8)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }}
+                                itemStyle={{ color: '#ffa630', fontSize: '14px', fontWeight: 'bold', fontStyle: 'italic' }}
+                                labelStyle={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', marginBottom: '4px' }}
+                            />
+                            <Bar dataKey="distance" radius={[4, 4, 0, 0]}>
+                                {data.map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={parseFloat(entry.distance) > 0 ? '#ffa630' : 'rgba(255,255,255,0.05)'} opacity={0.8} />
+                                ))}
+                            </Bar>
+                        </BarChart>
+                    </ResponsiveContainer>
+                </div>
+            )}
         </div>
     );
 };
 
 const ActivityList: React.FC = () => {
     const [interval, setInterval] = useState<IntervalType>('month');
-    const navigate = useNavigate();
 
     const toggleInterval = (newInterval: IntervalType): void => {
         setInterval(newInterval);
@@ -165,27 +196,27 @@ const ActivityList: React.FC = () => {
             switch (interval) {
                 case 'year':
                     key = date.getFullYear().toString();
-                    index = date.getMonth(); // Return current month (0-11)
+                    index = date.getMonth();
                     break;
                 case 'month':
-                    key = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`; // Zero padding
-                    index = date.getDate() - 1; // Return current day (0-30)
+                    key = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+                    index = date.getDate() - 1;
                     break;
                 case 'week':
                     const currentDate = new Date(date.valueOf());
-                    currentDate.setDate(currentDate.getDate() + 4 - (currentDate.getDay() || 7)); // Set to nearest Thursday (ISO weeks defined by Thursday)
+                    currentDate.setDate(currentDate.getDate() + 4 - (currentDate.getDay() || 7));
                     const yearStart = new Date(currentDate.getFullYear(), 0, 1);
                     const weekNum = Math.ceil((((currentDate.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
                     key = `${currentDate.getFullYear()}-W${weekNum.toString().padStart(2, '0')}`;
-                    index = (date.getDay() + 6) % 7; // Return current day (0-6, Monday-Sunday)
+                    index = (date.getDay() + 6) % 7;
                     break;
                 case 'day':
-                    key = date.toLocaleDateString("zh").replaceAll('/', '-'); // Format date as YYYY-MM-DD
-                    index = 0; // Return 0
+                    key = date.toLocaleDateString("zh").replaceAll('/', '-');
+                    index = 0;
                     break;
                 default:
                     key = date.getFullYear().toString();
-                    index = 0; // Default return 0
+                    index = 0;
             }
 
             if (!acc[key]) acc[key] = {
@@ -198,15 +229,13 @@ const ActivityList: React.FC = () => {
                 location: ''
             };
 
-            const distanceKm = activity.distance / 1000; // Convert to kilometers
+            const distanceKm = activity.distance / 1000;
             const timeInSeconds = convertTimeToSeconds(activity.moving_time);
             const speedKmh = timeInSeconds > 0 ? distanceKm / (timeInSeconds / 3600) : 0;
 
             acc[key].totalDistance += distanceKm;
             acc[key].totalTime += timeInSeconds;
             acc[key].count += 1;
-
-            // Accumulate daily distances
             acc[key].dailyDistances[index] = (acc[key].dailyDistances[index] || 0) + distanceKm;
 
             if (distanceKm > acc[key].maxDistance) acc[key].maxDistance = distanceKm;
@@ -219,48 +248,60 @@ const ActivityList: React.FC = () => {
     }, [interval]);
 
     return (
-        <div className={styles.activityList}>
-            <div className={styles.filterContainer}>
-                <button
-                    className={styles.smallHomeButton}
-                    onClick={() => navigate('/')}
-                >
-                    Home
-                </button>
-                <select
-                    onChange={(e) => toggleInterval(e.target.value as IntervalType)}
-                    value={interval}
-                >
-                    <option value="year">{ACTIVITY_TOTAL.YEARLY_TITLE}</option>
-                    <option value="month">{ACTIVITY_TOTAL.MONTHLY_TITLE}</option>
-                    <option value="week">{ACTIVITY_TOTAL.WEEKLY_TITLE}</option>
-                    <option value="day">{ACTIVITY_TOTAL.DAILY_TITLE}</option>
-                    <option value="life">Life</option>
-                </select>
+        <div className="w-full max-w-7xl mx-auto px-6 text-white min-h-screen">
+            
+            {/* Header & Filter Controls */}
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-16">
+                <div className="space-y-2">
+                    <h1 className="text-4xl sm:text-6xl font-black italic uppercase tracking-tighter drop-shadow-xl">
+                        {IS_CHINESE ? '活动概览' : 'Activity Summary'}
+                    </h1>
+                    <span className="text-[10px] font-black uppercase tracking-[0.4em] text-white/30 hidden sm:block italic">Activity Summary</span>
+                    <div className="h-1 w-16 bg-brand rounded-full mt-2" />
+                </div>
+                
+                <div className="flex items-center gap-4">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-white/30 hidden sm:block">View By</span>
+                    <div className="relative inline-flex items-center bg-[#0a0a0a]/80 border border-white/10 rounded-xl p-1 backdrop-blur-xl">
+                        {(['year', 'month', 'week', 'day', 'life'] as const).map((opt) => (
+                            <button
+                                key={opt}
+                                onClick={() => toggleInterval(opt)}
+                                className={`px-4 py-2 text-xs font-bold uppercase tracking-widest rounded-lg transition-all duration-300 ${
+                                    interval === opt 
+                                    ? 'bg-white/10 text-brand shadow-sm' 
+                                    : 'text-white/40 hover:text-white/80 hover:bg-white/5'
+                                }`}
+                            >
+                                {opt === 'life' ? 'Life' : ACTIVITY_TOTAL[`${opt.toUpperCase()}LY_TITLE` as keyof typeof ACTIVITY_TOTAL] || opt}
+                            </button>
+                        ))}
+                    </div>
+                </div>
             </div>
 
+            {/* Life SVG View */}
             {interval === 'life' && (
-                <div className={styles.lifeContainer}>
-                    <Suspense fallback={<div>Loading SVG...</div>}>
-                        <MonthofLifeSvg />
-                    </Suspense>
+                <div className="w-full rounded-[3rem] bg-white/[0.02] border border-white/5 p-4 sm:p-8 backdrop-blur-xl flex justify-center shadow-2xl">
+                    <MonthOfLife />
                 </div>
             )}
 
+            {/* Data Cards Grid */}
             {interval !== 'life' && (
-                <div className={styles.summaryContainer}>
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 pb-32">
                     {Object.entries(activitiesByInterval)
                         .sort(([a], [b]) => {
                             if (interval === 'day') {
-                                return new Date(b).getTime() - new Date(a).getTime(); // Sort by date
+                                return new Date(b).getTime() - new Date(a).getTime();
                             } else if (interval === 'week') {
                                 const [yearA, weekA] = a.split('-W').map(Number);
                                 const [yearB, weekB] = b.split('-W').map(Number);
-                                return yearB - yearA || weekB - weekA; // Sort by year and week number
+                                return yearB - yearA || weekB - weekA;
                             } else {
                                 const [yearA, monthA = 0] = a.split('-').map(Number);
                                 const [yearB, monthB = 0] = b.split('-').map(Number);
-                                return yearB - yearA || monthB - monthA; // Sort by year and month
+                                return yearB - yearA || monthB - monthA;
                             }
                         })
                         .map(([period, summary]) => (

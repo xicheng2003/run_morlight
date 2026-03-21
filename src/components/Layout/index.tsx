@@ -9,9 +9,9 @@ const Layout = ({ children }: React.PropsWithChildren) => {
   const { siteTitle, description } = useSiteMetadata();
 
   return (
-    <>
-      <Helmet bodyAttributes={{ class: styles.body }}>
-        <html lang="en" />
+    <div className="min-h-screen bg-[#0a0a0a] text-white selection:bg-brand/30">
+      <Helmet bodyAttributes={{ class: 'bg-[#0a0a0a]' }}>
+        <html lang="en" className="dark" />
         <title>{siteTitle}</title>
         <meta name="description" content={description} />
         <meta name="keywords" content="running" />
@@ -21,10 +21,10 @@ const Layout = ({ children }: React.PropsWithChildren) => {
         />
       </Helmet>
       <Header />
-      <div className="mb-16 p-4 lg:flex lg:p-16">
+      <main className="relative">
         {children}
-      </div>
-    </>
+      </main>
+    </div>
   );
 };
 

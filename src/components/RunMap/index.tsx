@@ -144,13 +144,13 @@ const RunMap = ({
 
   const style: React.CSSProperties = {
     width: '100%',
-    height: MAP_HEIGHT,
+    height: '100%',
   };
   const fullscreenButton: React.CSSProperties = {
     position: 'absolute',
-    marginTop: '29.2px',
-    right: '0px',
-    opacity: 0.3,
+    marginTop: '80px',
+    right: '20px',
+    opacity: 0.5,
   };
 
   useEffect(() => {
@@ -171,7 +171,7 @@ const RunMap = ({
   }, []);
 
   return (
-    <div className="relative w-full overflow-hidden rounded-lg shadow-lg">
+    <div className="h-full w-full overflow-hidden">
       <Map
         {...viewState}
         onMove={onMove}
@@ -180,6 +180,7 @@ const RunMap = ({
         mapStyle={MAP_STYLE}
         ref={mapRefCallback}
         onError={onMapError}
+        scrollZoom={false}
       >
         <RunMapButtons changeYear={changeYear} thisYear={thisYear} />
         <Source id="data" type="geojson" data={mergedGeoData}>
@@ -200,6 +201,22 @@ const RunMap = ({
             }}
             filter={filterCountries}
           />
+          {/* Layer 1: The Outer Glow (Wide & Blurry) */}
+          <Layer
+            id="runs-glow"
+            type="line"
+            paint={{
+              'line-color': ['get', 'color'],
+              'line-width': (viewState.zoom ?? 0) <= 3 && lights ? 2 : 6,
+              'line-opacity': isSingleRun || !lights ? 0.4 : 0.15,
+              'line-blur': 8,
+            }}
+            layout={{
+              'line-join': 'round',
+              'line-cap': 'round',
+            }}
+          />
+          {/* Layer 2: The Main Path (Standard) */}
           <Layer
             id="runs2"
             type="line"
@@ -208,7 +225,21 @@ const RunMap = ({
               'line-width': (viewState.zoom ?? 0) <= 3 && lights ? 1 : 2,
               'line-dasharray': dash as any,
               'line-opacity': isSingleRun || (viewState.zoom ?? 0) <= 3 || !lights ? 1 : LINE_OPACITY,
-              'line-blur': 1,
+              'line-blur': 0.5,
+            }}
+            layout={{
+              'line-join': 'round',
+              'line-cap': 'round',
+            }}
+          />
+          {/* Layer 3: The Light Core (Thin & Bright) */}
+          <Layer
+            id="runs-core"
+            type="line"
+            paint={{
+              'line-color': '#ffffff',
+              'line-width': 0.8,
+              'line-opacity': isSingleRun ? 0.6 : 0.1,
             }}
             layout={{
               'line-join': 'round',

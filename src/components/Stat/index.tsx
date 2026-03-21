@@ -15,11 +15,11 @@ const Stat = ({
   citySize,
   onClick,
 }: IStatProperties) => (
-  <div className={`${className}`} onClick={onClick}>
-    <span className={`text-${citySize || 5}xl font-bold italic`}>
+  <div className={`${className} flex flex-col`} onClick={onClick}>
+    <span className={`text-${citySize ? citySize + 'xl' : 'xl sm:text-4xl'} font-black italic tracking-tighter text-brand break-words`}>
       {intComma(value.toString())}
     </span>
-    <span className="text-lg font-semibold italic">{description}</span>
+    <span className="text-[9px] sm:text-xs font-bold uppercase tracking-widest text-white/40 mt-1 leading-tight">{description}</span>
   </div>
 );
 

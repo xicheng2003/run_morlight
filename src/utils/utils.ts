@@ -315,19 +315,22 @@ const titleForRun = (run: Activity): string => {
   if (runDistance >= 40) {
     return RUN_TITLES.FULL_MARATHON_RUN_TITLE;
   }
-  if (runHour >= 0 && runHour <= 10) {
+  if (runHour >= 5 && runHour < 9) {
     return RUN_TITLES.MORNING_RUN_TITLE;
   }
-  if (runHour > 10 && runHour <= 14) {
+  if (runHour >= 9 && runHour < 12) {
+    return RUN_TITLES.MORNING_RUN_TITLE; // You can separate into "Morning" and "Late Morning" if needed, but keeping it standard
+  }
+  if (runHour >= 12 && runHour < 14) {
     return RUN_TITLES.MIDDAY_RUN_TITLE;
   }
-  if (runHour > 14 && runHour <= 18) {
+  if (runHour >= 14 && runHour < 18) {
     return RUN_TITLES.AFTERNOON_RUN_TITLE;
   }
-  if (runHour > 18 && runHour <= 21) {
+  if (runHour >= 18 && runHour < 21) {
     return RUN_TITLES.EVENING_RUN_TITLE;
   }
-  return RUN_TITLES.NIGHT_RUN_TITLE;
+  return RUN_TITLES.NIGHT_RUN_TITLE; // 21:00 to 04:59
 };
 
 export interface IViewState {
@@ -340,36 +343,50 @@ const getBoundsForGeoData = (
   geoData: FeatureCollection<LineString>
 ): IViewState => {
   const { features } = geoData;
-  let points: Coordinate[] = [];
-  // find first have data
+  let minLon = Infinity;
+  let maxLon = -Infinity;
+  let minLat = Infinity;
+  let maxLat = -Infinity;
+  let hasPoints = false;
+
   for (const f of features) {
     if (f.geometry.coordinates.length) {
-      points = f.geometry.coordinates as Coordinate[];
-      break;
+      for (const [lon, lat] of f.geometry.coordinates) {
+        if (lon < minLon) minLon = lon;
+        if (lon > maxLon) maxLon = lon;
+        if (lat < minLat) minLat = lat;
+        if (lat > maxLat) maxLat = lat;
+      }
+      hasPoints = true;
     }
   }
-  if (points.length === 0) {
-    return { longitude: 20, latitude: 20, zoom: 3 };
+
+  if (!hasPoints) {
+    return { longitude: 105, latitude: 35, zoom: 3 }; // Default center
   }
-  if (points.length === 2 && String(points[0]) === String(points[1])) {
-    return { longitude: points[0][0], latitude: points[0][1], zoom: 9 };
+  if (minLon === maxLon && minLat === maxLat) {
+    return { longitude: minLon, latitude: minLat, zoom: 12 };
   }
-  // Calculate corner values of bounds
-  const pointsLong = points.map((point) => point[0]) as number[];
-  const pointsLat = points.map((point) => point[1]) as number[];
+
   const cornersLongLat: [Coordinate, Coordinate] = [
-    [Math.min(...pointsLong), Math.min(...pointsLat)],
-    [Math.max(...pointsLong), Math.max(...pointsLat)],
+    [minLon, minLat],
+    [maxLon, maxLat],
   ];
-  const viewState = new WebMercatorViewport({
-    width: 800,
-    height: 600,
-  }).fitBounds(cornersLongLat, { padding: 200 });
-  let { longitude, latitude, zoom } = viewState;
-  if (features.length > 1) {
-    zoom = 11.5;
+
+  try {
+    const viewState = new WebMercatorViewport({
+      width: typeof window !== 'undefined' ? window.innerWidth : 800,
+      height: typeof window !== 'undefined' ? window.innerHeight : 600,
+    }).fitBounds(cornersLongLat, { padding: 80 });
+    return { 
+      longitude: viewState.longitude, 
+      latitude: viewState.latitude, 
+      // Cap the maximum zoom to avoid zooming too close on single short runs
+      zoom: Math.min(viewState.zoom, 14) 
+    };
+  } catch (e) {
+    return { longitude: (minLon + maxLon) / 2, latitude: (minLat + maxLat) / 2, zoom: 10 };
   }
-  return { longitude, latitude, zoom };
 };
 
 const filterYearRuns = (run: Activity, year: string) => {

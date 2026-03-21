@@ -18,24 +18,22 @@ const LocationStat = ({
   changeCity,
   changeTitle,
 }: ILocationStatProps) => (
-  <div className="w-full pb-16 lg:w-full lg:pr-16">
-    <section className="pb-0">
-      <p className="leading-relaxed">
+  <div className="w-full flex flex-col gap-6">
+    <section className="pb-0 hidden sm:block">
+      <p className="text-white/40 text-sm font-medium leading-relaxed">
         {CHINESE_LOCATION_INFO_MESSAGE_FIRST}
-        .
         <br />
         {CHINESE_LOCATION_INFO_MESSAGE_SECOND}
-        .
-        <br />
-        <br />
-        Yesterday you said tomorrow.
       </p>
     </section>
-    <hr color="red" />
-    <LocationSummary />
-    <CitiesStat onClick={changeCity} />
-    <PeriodStat onClick={changeTitle} />
-    <YearStat year="Total" onClick={changeYear} />
+    <div className="flex flex-col gap-8">
+      <LocationSummary />
+      <div className="flex flex-wrap gap-4">
+        <CitiesStat onClick={changeCity} />
+        <PeriodStat onClick={changeTitle} />
+      </div>
+      <YearStat year="Total" onClick={changeYear} />
+    </div>
   </div>
 );
 

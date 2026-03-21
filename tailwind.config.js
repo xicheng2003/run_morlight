@@ -15,7 +15,17 @@ export default {
         'sans-serif',
       ],
     },
-    extend: {},
+    extend: {
+      colors: {
+        brand: '#ffa630',
+      },
+      backdropBlur: {
+        xs: '2px',
+      },
+      backgroundImage: {
+        'glass-gradient': 'linear-gradient(rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.01))',
+      },
+    },
   },
   plugins: [],
 };

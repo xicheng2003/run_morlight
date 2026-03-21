@@ -5,16 +5,13 @@ import useActivities from '@/hooks/useActivities';
 const LocationSummary = () => {
   const { years, countries, provinces, cities } = useActivities();
   return (
-    <div className="cursor-pointer">
-      <section>
-        {years ? <Stat value={`${years.length}`} description=" 年里我跑过" /> : null}
-        {countries ? <Stat value={countries.length} description=" 个国家" /> : null}
-        {provinces ? <Stat value={provinces.length} description=" 个省份" /> : null}
-        {cities ? (
-          <Stat value={Object.keys(cities).length} description=" 个城市" />
-        ) : null}
-      </section>
-      <hr color="red" />
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
+      {years ? <Stat value={`${years.length}`} description=" Years" /> : null}
+      {countries ? <Stat value={countries.length} description=" Countries" /> : null}
+      {provinces ? <Stat value={provinces.length} description=" Provinces" /> : null}
+      {cities ? (
+        <Stat value={Object.keys(cities).length} description=" Cities" />
+      ) : null}
     </div>
   );
 };
