@@ -65,12 +65,18 @@ const Index = () => {
   };
 
   const [isMobile, setIsMobile] = useState(false);
+  const bioRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  const scrollToBio = () => {
+    bioRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   const lastRun = [...activities].sort(sortDateFunc)[0];
   const lastRunDate = lastRun ? new Date(lastRun.start_date_local) : new Date();
@@ -182,9 +188,27 @@ const Index = () => {
       </div>
 
       <div className="pointer-events-none relative z-30 w-full text-white">
-        <section className={`${isMobile ? 'h-[40vh]' : 'h-[80vh]'} w-full`} />
+        <section className={`${isMobile ? 'h-[45vh]' : 'h-[80vh]'} w-full relative`}>
+          {isMobile && progress < 0.1 && (
+            <div 
+              onClick={scrollToBio}
+              className="pointer-events-auto absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 cursor-pointer animate-bounce group"
+            >
+              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40 group-hover:text-brand transition-colors">Explore Stats</span>
+              <div className="h-8 w-px bg-gradient-to-b from-brand to-transparent" />
+              <svg 
+                className="w-4 h-4 text-brand" 
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+          )}
+        </section>
 
-        <section className="relative flex flex-col items-center">
+        <section ref={bioRef} className="relative flex flex-col items-center">
           <div
             className="mb-24 flex w-full max-w-5xl flex-col gap-12 px-8 transition-all duration-1000 ease-out"
             style={{
