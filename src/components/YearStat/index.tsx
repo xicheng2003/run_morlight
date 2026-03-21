@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import Stat from '@/components/Stat';
 import useActivities from '@/hooks/useActivities';
 import { formatPace, ProcessedActivity } from '@/utils/utils';

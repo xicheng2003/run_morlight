@@ -202,7 +202,7 @@ const ActivityList: React.FC = () => {
                     key = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
                     index = date.getDate() - 1;
                     break;
-                case 'week':
+                case 'week': {
                     const currentDate = new Date(date.valueOf());
                     currentDate.setDate(currentDate.getDate() + 4 - (currentDate.getDay() || 7));
                     const yearStart = new Date(currentDate.getFullYear(), 0, 1);
@@ -210,6 +210,7 @@ const ActivityList: React.FC = () => {
                     key = `${currentDate.getFullYear()}-W${weekNum.toString().padStart(2, '0')}`;
                     index = (date.getDay() + 6) % 7;
                     break;
+                }
                 case 'day':
                     key = date.toLocaleDateString("zh").replaceAll('/', '-');
                     index = 0;

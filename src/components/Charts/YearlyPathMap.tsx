@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { ProcessedActivity } from '@/utils/utils';
 
 interface IProps {

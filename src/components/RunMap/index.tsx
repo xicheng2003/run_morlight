@@ -13,7 +13,6 @@ import {
   COUNTRY_FILL_COLOR,
   USE_DASH_LINE,
   LINE_OPACITY,
-  MAP_HEIGHT,
   PRIVACY_MODE,
   LIGHTS_ON,
 } from '@/utils/const';

@@ -1,6 +1,5 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import useActivities from '@/hooks/useActivities';
-import { format } from 'date-fns'; // 假设项目有 date-fns，如果没有我用原生
 
 const ActivityHeatmap = () => {
   const { activities } = useActivities();

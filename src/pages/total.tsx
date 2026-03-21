@@ -1,11 +1,10 @@
-import React from 'react';
 import ActivityList from '@/components/ActivityList';
 import Layout from '@/components/Layout';
 
 const HomePage = () => {
   return (
     <Layout>
-      <div className="pt-24 sm:pt-32 pb-16">
+      <div className="pb-16 pt-24 sm:pt-32">
         <ActivityList />
       </div>
     </Layout>

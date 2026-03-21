@@ -1,11 +1,10 @@
 import PropTypes from 'prop-types';
-import React from 'react';
+import { PropsWithChildren } from 'react';
 import { Helmet } from 'react-helmet-async';
 import Header from '@/components/Header';
 import useSiteMetadata from '@/hooks/useSiteMetadata';
-import styles from './style.module.css';
 
-const Layout = ({ children }: React.PropsWithChildren) => {
+const Layout = ({ children }: PropsWithChildren) => {
   const { siteTitle, description } = useSiteMetadata();
 
   return (

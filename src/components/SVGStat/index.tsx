@@ -1,4 +1,3 @@
-import React from 'react';
 import ActivityHeatmap from '../Charts/ActivityHeatmap';
 import ActivityGrid from '../Charts/ActivityGrid';
 import ActivityMetrics from '../Charts/ActivityMetrics';
