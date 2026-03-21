@@ -27,7 +27,7 @@ const Header = () => {
       >
         {/* Logo Section */}
         <Link to={siteUrl} className="flex items-center gap-2 md:gap-4 group">
-          <div className="relative">
+          <div className="relative hidden sm:block">
             <img 
               className={`transition-all duration-700 rounded-lg ${scrolled ? 'h-6 w-6 md:h-8 md:w-8' : 'h-8 w-8 md:h-12 md:w-12 grayscale group-hover:grayscale-0'}`} 
               alt="logo" 
@@ -35,7 +35,7 @@ const Header = () => {
             />
             {!scrolled && <div className="absolute -inset-1.5 md:-inset-2 border border-brand/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity" />}
           </div>
-          <span className={`whitespace-nowrap font-black italic tracking-tighter uppercase transition-all duration-700 hidden sm:inline-block ${
+          <span className={`whitespace-nowrap font-black italic tracking-tighter uppercase transition-all duration-700 ${
             scrolled ? 'text-sm md:text-lg text-white/90' : 'text-xl md:text-3xl text-white'
           }`}>
             RUN <span className="text-brand">LOG</span>
