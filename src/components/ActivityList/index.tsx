@@ -91,13 +91,13 @@ const ActivityCard: React.FC<ActivityCardProps> = ({ period, summary, dailyDista
     const yAxisTicks = Array.from({ length: Math.ceil(yAxisMax / 5) + 1 }, (_, i) => i * 5);
 
     return (
-        <div className="group rounded-[2.5rem] bg-white/[0.02] border border-white/5 p-8 backdrop-blur-xl transition-all duration-500 hover:bg-white/[0.04] hover:-translate-y-2 hover:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.5)]">
-            <header className="mb-8 flex items-end justify-between">
-                <h2 className="text-3xl font-black italic uppercase tracking-tighter text-brand">{period}</h2>
-                <div className="h-px flex-1 bg-gradient-to-r from-brand/20 to-transparent mx-6 mb-2 hidden sm:block" />
+        <div className="group rounded-[2rem] md:rounded-[2.5rem] bg-white/[0.02] border border-white/5 p-6 md:p-8 backdrop-blur-xl transition-all duration-500 hover:bg-white/[0.04] hover:-translate-y-2 hover:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.5)]">
+            <header className="mb-6 md:mb-8 flex items-end justify-between">
+                <h2 className="text-xl md:text-3xl font-black italic uppercase tracking-tighter text-brand">{period}</h2>
+                <div className="h-px flex-1 bg-gradient-to-r from-brand/20 to-transparent mx-4 md:mx-6 mb-2 hidden sm:block" />
             </header>
             
-            <div className="grid grid-cols-2 gap-y-6 gap-x-4 mb-8">
+            <div className="grid grid-cols-2 gap-y-4 md:gap-y-6 gap-x-4 mb-6 md:mb-8">
                 <div className="flex flex-col gap-1">
                     <span className="text-[9px] font-black uppercase tracking-widest text-white/30">{ACTIVITY_TOTAL.TOTAL_DISTANCE_TITLE}</span>
                     <span className="text-2xl font-black italic text-white/90">{summary.totalDistance.toFixed(1)} <span className="text-xs font-bold text-white/40 not-italic">KM</span></span>
