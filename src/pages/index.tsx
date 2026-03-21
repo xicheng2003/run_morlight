@@ -61,8 +61,16 @@ const Index = () => {
     transform: `scale(${1 - progress * 0.05})`,
     filter: `blur(${progress * 15}px)`,
     opacity: 1 - progress * 0.5,
-    pointerEvents: progress > 0.3 ? 'none' : ('auto' as any),
+    pointerEvents: progress > 0.1 ? 'none' : ('auto' as any),
   };
+
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const lastRun = [...activities].sort(sortDateFunc)[0];
   const lastRunDate = lastRun ? new Date(lastRun.start_date_local) : new Date();
@@ -174,7 +182,7 @@ const Index = () => {
       </div>
 
       <div className="pointer-events-none relative z-30 w-full text-white">
-        <section className="h-[80vh] w-full" />
+        <section className={`${isMobile ? 'h-[40vh]' : 'h-[80vh]'} w-full`} />
 
         <section className="relative flex flex-col items-center">
           <div

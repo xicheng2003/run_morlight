@@ -13,7 +13,7 @@ const ActivityGrid = () => {
   }, [activities]);
 
   return (
-    <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-10 gap-4 py-8">
+    <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-10 gap-2 md:gap-4 py-8">
       {sortedActivities.map((run) => {
         // Calculate bounds for mini SVG
         const points = run.path;

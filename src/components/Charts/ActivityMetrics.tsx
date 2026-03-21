@@ -48,25 +48,25 @@ const ActivityMetrics = () => {
   }, [activities]);
 
   return (
-    <div className="flex flex-col gap-10">
+    <div className="flex flex-col gap-6 md:gap-10">
       {/* 核心指标栏 */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
         {Object.entries(stats).map(([label, value]) => (
-          <div key={label} className="rounded-2xl bg-white/[0.03] p-4 border border-white/5">
-            <span className="text-[10px] font-bold text-white/30 uppercase tracking-widest">{label}</span>
-            <div className="mt-1 text-2xl font-black italic text-brand tracking-tighter">{value}</div>
+          <div key={label} className="rounded-xl md:rounded-2xl bg-white/[0.03] p-3 md:p-4 border border-white/5 flex sm:flex-col justify-between items-center sm:items-start">
+            <span className="text-[8px] md:text-[10px] font-bold text-white/30 uppercase tracking-widest">{label}</span>
+            <div className="text-xl md:text-2xl font-black italic text-brand tracking-tighter">{value}</div>
           </div>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full min-h-[350px]">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 w-full">
         {/* 趋势图 */}
-        <div className="rounded-3xl bg-white/[0.02] p-6 border border-white/5">
-          <header className="mb-6 flex items-center gap-3">
+        <div className="rounded-2xl md:rounded-3xl bg-white/[0.02] p-4 md:p-6 border border-white/5">
+          <header className="mb-4 md:mb-6 flex items-center gap-3">
             <div className="h-4 w-1 bg-brand rounded-full" />
-            <h4 className="text-xs font-black text-white/70 tracking-widest">近12个月里程趋势</h4>
+            <h4 className="text-[10px] md:text-xs font-black text-white/70 tracking-widest uppercase">近12个月里程趋势</h4>
           </header>
-          <div className="h-[250px] w-full">
+          <div className="h-[180px] md:h-[250px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={monthlyData}>
                 <defs>
@@ -88,16 +88,16 @@ const ActivityMetrics = () => {
         </div>
 
         {/* 雷达图 */}
-        <div className="rounded-3xl bg-white/[0.02] p-6 border border-white/5">
-          <header className="mb-6 flex items-center gap-3">
+        <div className="rounded-2xl md:rounded-3xl bg-white/[0.02] p-4 md:p-6 border border-white/5">
+          <header className="mb-4 md:mb-6 flex items-center gap-3">
             <div className="h-4 w-1 bg-blue-500 rounded-full" />
-            <h4 className="text-xs font-black text-white/70 tracking-widest">运动类型分布</h4>
+            <h4 className="text-[10px] md:text-xs font-black text-white/70 tracking-widest uppercase">运动类型分布</h4>
           </header>
-          <div className="h-[250px] w-full">
+          <div className="h-[180px] md:h-[250px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <RadarChart data={typeData}>
                 <PolarGrid stroke="rgba(255,255,255,0.1)" />
-                <PolarAngleAxis dataKey="subject" tick={{fill: 'rgba(255,255,255,0.5)', fontSize: 10}} />
+                <PolarAngleAxis dataKey="subject" tick={{fill: 'rgba(255,255,255,0.5)', fontSize: 8}} />
                 <Radar dataKey="A" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.2} />
               </RadarChart>
             </ResponsiveContainer>
