@@ -82,24 +82,24 @@ const ActivityGrid = () => {
   }, [activities]);
 
   return (
-    <div className="grid grid-cols-2 gap-3 py-6 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 md:gap-4">
+    <div className="grid grid-cols-4 gap-2 py-8 sm:grid-cols-6 md:grid-cols-10 md:gap-4">
       {sortedActivities.map((activity) => (
         <div
           key={activity!.run_id}
-          className="group relative aspect-square rounded-2xl border border-white/6 bg-white/[0.03] p-2.5 shadow-lg transition-colors duration-300 hover:bg-white/[0.08] md:p-3"
+          className="group relative aspect-square rounded-xl bg-white/[0.03] p-2 shadow-lg transition-all duration-500 hover:scale-110 hover:bg-white/[0.08]"
           title={`${activity!.name} - ${(activity!.distance / 1000).toFixed(2)}km`}
         >
           <img
             src={activity!.thumbnailUrl}
             alt={activity!.name}
-            className="h-full w-full opacity-85 md:opacity-70 md:transition-opacity md:group-hover:opacity-100"
+            className="h-full w-full opacity-60 transition-opacity group-hover:opacity-100"
             loading="lazy"
             decoding="async"
             draggable={false}
           />
 
-          <div className="pointer-events-none absolute inset-x-2 bottom-2 rounded-full bg-black/55 px-2 py-1 text-center opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
-            <span className="text-[10px] font-black text-white">
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-0 transition-opacity group-hover:opacity-100">
+            <span className="rounded-sm bg-black/60 px-1 text-[8px] font-black text-white">
               {(activity!.distance / 1000).toFixed(1)} km
             </span>
           </div>
