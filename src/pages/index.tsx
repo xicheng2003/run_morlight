@@ -24,6 +24,21 @@ import {
 
 const RunMap = lazy(() => import('@/components/RunMap'));
 
+const parseDateOnly = (dateTime?: string) => {
+  if (!dateTime) {
+    return null;
+  }
+
+  const [datePart] = dateTime.split(' ');
+  const [year, month, day] = datePart.split('-').map(Number);
+
+  if (!year || !month || !day) {
+    return null;
+  }
+
+  return new Date(year, month - 1, day);
+};
+
 const Index = () => {
   const { siteTitle } = useSiteMetadata();
   const { activities, cities, thisYear, isLoading, error } = useActivities();
@@ -81,10 +96,22 @@ const Index = () => {
   };
 
   const lastRun = [...activities].sort(sortDateFunc)[0];
-  const lastRunDate = lastRun ? new Date(lastRun.start_date_local) : new Date();
-  const daysAgo = Math.floor(
-    (new Date().getTime() - lastRunDate.getTime()) / (1000 * 3600 * 24)
+  const today = new Date();
+  const todayDateOnly = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate()
   );
+  const lastRunDateOnly = parseDateOnly(lastRun?.start_date_local);
+  const daysAgo = lastRunDateOnly
+    ? Math.max(
+        0,
+        Math.floor(
+          (todayDateOnly.getTime() - lastRunDateOnly.getTime()) /
+            (1000 * 3600 * 24)
+        )
+      )
+    : 0;
 
   useEffect(() => {
     if (shouldMountMap) {
