@@ -2,6 +2,7 @@ import React, { Suspense, lazy, useMemo, useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } from 'recharts';
 import { ACTIVITY_TOTAL, IS_CHINESE } from "@/utils/const";
 import useActivities from '@/hooks/useActivities';
+import { getActivitySport } from '@/utils/utils';
 
 const MonthOfLife = lazy(() => import('../Charts/MonthOfLife'));
 
@@ -11,6 +12,7 @@ interface Activity {
   distance: number;
   moving_time: string;
   type: string;
+  subtype?: string;
   location_country?: string;
 }
 
@@ -182,19 +184,30 @@ const ActivityCard: React.FC<ActivityCardProps> = ({ period, summary, dailyDista
 const ActivityList: React.FC = () => {
     const { activities, isLoading } = useActivities();
     const [interval, setInterval] = useState<IntervalType>('month');
+    const [activityFilter, setActivityFilter] = useState('全部');
 
     const toggleInterval = (newInterval: IntervalType): void => {
         setInterval(newInterval);
     };
 
     const filterActivities = (activity: Activity): boolean => {
-        return activity.type.toLowerCase() === 'run';
+        if (activityFilter === '全部') return true;
+        return (getActivitySport(activity as any) || activity.type) === activityFilter;
     };
 
     const convertTimeToSeconds = (time: string): number => {
         const [hours, minutes, seconds] = time.split(':').map(Number);
         return hours * 3600 + minutes * 60 + seconds;
     };
+
+    const activityTypes = useMemo(() => {
+        const values = new Set(
+            (activities as Activity[])
+                .map((activity) => getActivitySport(activity as any) || activity.type)
+                .filter(Boolean)
+        );
+        return ['全部', ...Array.from(values)];
+    }, [activities]);
 
     const activitiesByInterval = useMemo(() => {
         return (activities as Activity[]).filter(filterActivities).reduce((acc: ActivityGroups, activity) => {
@@ -254,7 +267,7 @@ const ActivityList: React.FC = () => {
 
             return acc;
         }, {});
-    }, [activities, interval]);
+    }, [activities, interval, activityFilter]);
 
     if (isLoading) {
         return (
@@ -307,6 +320,23 @@ const ActivityList: React.FC = () => {
                         ))}
                     </div>
                 </div>
+            </div>
+
+            <div className="mb-10 flex flex-wrap items-center gap-3">
+                {activityTypes.map((type) => (
+                    <button
+                        key={type}
+                        type="button"
+                        onClick={() => setActivityFilter(type)}
+                        className={`rounded-full px-4 py-2 text-xs font-black uppercase tracking-[0.18em] transition ${
+                            activityFilter === type
+                                ? 'border border-[rgba(255,166,48,0.24)] bg-[rgba(255,166,48,0.12)] text-[var(--accent-strong)]'
+                                : 'border border-white/10 bg-white/5 text-white/55 hover:text-white/80'
+                        }`}
+                    >
+                        {type}
+                    </button>
+                ))}
             </div>
 
             {/* Life SVG View */}

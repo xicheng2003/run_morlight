@@ -2,6 +2,7 @@ import {
   formatPace,
   titleForRun,
   formatRunTime,
+  getActivitySport,
   locationForRun,
   Activity,
   RunIds,
@@ -32,6 +33,7 @@ const RunRow = ({
   const heartRate = run.average_heartrate;
   const runTime = formatRunTime(run.moving_time);
   const { city, province } = locationForRun(run);
+  const activitySport = getActivitySport(run) || run.type;
   const isSelected = runIndex === elementIndex;
 
   const handleClick = () => {
@@ -55,7 +57,9 @@ const RunRow = ({
           <div className="space-y-1 text-left">
             <h3 className={styles.mobileTitle}>{titleForRun(run)}</h3>
             <p className={styles.mobileMeta}>
-              {[city || province, run.start_date_local].filter(Boolean).join(' · ')}
+              {[activitySport, city || province, run.start_date_local]
+                .filter(Boolean)
+                .join(' · ')}
             </p>
           </div>
           <div className={styles.mobileDistance}>{distance} KM</div>
@@ -90,7 +94,12 @@ const RunRow = ({
       key={run.start_date_local}
       onClick={handleClick}
     >
-      <td>{titleForRun(run)}</td>
+      <td>
+        <div className={styles.runTitleCell}>
+          <span>{titleForRun(run)}</span>
+          <span className={styles.runTypeBadge}>{activitySport}</span>
+        </div>
+      </td>
       <td>{distance}</td>
       {SHOW_ELEVATION_GAIN && <td>{elevation_gain}</td>}
       {paceParts && <td>{paceParts}</td>}

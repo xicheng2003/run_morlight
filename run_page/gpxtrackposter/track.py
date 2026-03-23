@@ -57,6 +57,29 @@ class Track:
         self.subtype = None  # for fit file
         self.device = ""
 
+    @staticmethod
+    def _normalize_activity_type(activity_type):
+        if not activity_type:
+            return "Run"
+
+        normalized = str(activity_type).strip()
+        alias_map = {
+            "running": "Run",
+            "run": "Run",
+            "virtualrun": "VirtualRun",
+            "virtual_run": "VirtualRun",
+            "walk": "Walk",
+            "walking": "Walk",
+            "ride": "Ride",
+            "cycling": "Ride",
+            "bike": "Ride",
+            "hike": "Hike",
+            "hiking": "Hike",
+            "swim": "Swim",
+            "swimming": "Swim",
+        }
+        return alias_map.get(normalized.lower(), normalized)
+
     def load_gpx(self, file_name):
         """
         TODO refactor with load_tcx to one function
@@ -150,6 +173,12 @@ class Track:
 
     def _load_tcx_data(self, tcx, file_name):
         self.length = float(tcx.distance)
+        tcx_activity_type = getattr(tcx, "activity_type", None) or getattr(
+            tcx, "sport", None
+        )
+        if tcx_activity_type:
+            self.type = self._normalize_activity_type(tcx_activity_type)
+            self.subtype = self.type
         time_values = [i.time for i in tcx.trackpoints]
         if not time_values:
             raise TrackLoadError("Track is empty.")
@@ -205,6 +234,9 @@ class Track:
         for t in gpx.tracks:
             if self.track_name is None:
                 self.track_name = t.name
+            if getattr(t, "type", None):
+                self.type = self._normalize_activity_type(t.type)
+                self.subtype = self.type
             for s in t.segments:
                 try:
                     extensions = [
@@ -262,10 +294,7 @@ class Track:
         self.average_heartrate = (
             message["avg_heart_rate"] if "avg_heart_rate" in message else None
         )
-        if message["sport"].lower() == "running":
-            self.type = "Run"
-        else:
-            self.type = message["sport"].lower()
+        self.type = self._normalize_activity_type(message["sport"])
         self.subtype = message["sub_sport"] if "sub_sport" in message else None
 
         # moving_dict

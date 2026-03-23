@@ -22,6 +22,7 @@ KEEP2STRAVA = {
     "outdoorWalking": "Walk",
     "outdoorRunning": "Run",
     "outdoorCycling": "Ride",
+    "outdoorHiking": "Hike",
     "indoorRunning": "VirtualRun",
 }
 # need to test
@@ -35,6 +36,32 @@ TIMESTAMP_THRESHOLD_IN_DECISECOND = 3_600_000  # Threshold for target timestamp 
 
 # If your points need trans from gcj02 to wgs84 coordinate which use by Mapbox
 TRANS_GCJ02_TO_WGS84 = True
+
+
+def map_keep_activity_type(data_type):
+    if data_type in KEEP2STRAVA:
+        return KEEP2STRAVA[data_type]
+
+    normalized = str(data_type or "").strip()
+    fallback_map = {
+        "indoorWalking": "Walk",
+        "indoorCycling": "Ride",
+        "indoorHiking": "Hike",
+    }
+    if normalized in fallback_map:
+        return fallback_map[normalized]
+
+    lower_type = normalized.lower()
+    if "hiking" in lower_type or "hike" in lower_type:
+        return "Hike"
+    if "walking" in lower_type or "walk" in lower_type:
+        return "Walk"
+    if "cycling" in lower_type or "biking" in lower_type or "ride" in lower_type:
+        return "Ride"
+    if "running" in lower_type or "run" in lower_type:
+        return "VirtualRun" if "indoor" in lower_type else "Run"
+
+    return normalized or "Run"
 
 
 def login(session, mobile, password):
@@ -140,9 +167,10 @@ def parse_raw_data_to_nametuple(
             p_hr = find_nearest_hr(decoded_hr_data, int(p["timestamp"]), start_time)
             if p_hr:
                 p["hr"] = p_hr
+        mapped_activity_type = map_keep_activity_type(run_data.get("dataType"))
         if run_data["dataType"].startswith("outdoor"):
             gpx_data = parse_points_to_gpx(
-                run_points_data_gpx, start_time, KEEP2STRAVA[run_data["dataType"]]
+                run_points_data_gpx, start_time, mapped_activity_type
             )
             elevation_gain = gpx_data.get_uphill_downhill().uphill
             if with_download_gpx and str(keep_id) not in old_gpx_ids:
@@ -159,12 +187,13 @@ def parse_raw_data_to_nametuple(
     if not run_data["duration"]:
         print(f"ID {keep_id} has no total time just ignore please check")
         return
+    mapped_activity_type = map_keep_activity_type(run_data.get("dataType"))
     d = {
         "id": int(keep_id),
-        "name": f"{KEEP2STRAVA[run_data['dataType']]} from keep",
+        "name": f"{mapped_activity_type} from keep",
         # future to support others workout now only for run
-        "type": f"{KEEP2STRAVA[(run_data['dataType'])]}",
-        "subtype": f"{KEEP2STRAVA[(run_data['dataType'])]}",
+        "type": f"{mapped_activity_type}",
+        "subtype": f"{mapped_activity_type}",
         "start_date": datetime.strftime(start_date, "%Y-%m-%d %H:%M:%S"),
         "end": datetime.strftime(end, "%Y-%m-%d %H:%M:%S"),
         "start_date_local": datetime.strftime(start_date_local, "%Y-%m-%d %H:%M:%S"),

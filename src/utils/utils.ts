@@ -46,6 +46,31 @@ export interface ProcessedActivity extends Activity {
   color: string;
 }
 
+const normalizeActivityType = (type = '', subtype = ''): string => {
+  const raw = `${type}`.trim().toLowerCase();
+  const rawSubtype = `${subtype}`.trim().toLowerCase();
+
+  if (
+    raw === 'run' ||
+    raw === 'running' ||
+    raw === 'virtualrun' ||
+    raw === 'virtual_run'
+  ) {
+    if (rawSubtype === 'trail') return 'trail';
+    if (rawSubtype === 'treadmill') return 'treadmill';
+    if (raw === 'virtualrun' || raw === 'virtual_run') return 'virtual-run';
+    return 'run';
+  }
+
+  if (raw === 'ride' || raw === 'cycling' || raw === 'bike') return 'ride';
+  if (raw === 'walk' || raw === 'walking') return 'walk';
+  if (raw === 'hike' || raw === 'hiking') return 'hike';
+  if (raw === 'swim' || raw === 'swimming') return 'swim';
+  if (raw.includes('ski')) return 'ski';
+
+  return raw;
+};
+
 const titleForShow = (run: Activity): string => {
   const date = run.start_date_local.slice(0, 11);
   const distance = (run.distance / 1000.0).toFixed(2);
@@ -231,22 +256,19 @@ const pathForRun = (run: Activity): Coordinate[] => {
 };
 
 const colorForRun = (run: Activity): string => {
-  switch (run.type) {
-    case 'Run': {
-      if (run.subtype === 'trail') {
-        return RUN_TRAIL_COLOR;
-      } else if (run.subtype === 'generic') {
-        return RUN_COLOR;
-      }
+  switch (normalizeActivityType(run.type, run.subtype)) {
+    case 'trail':
+      return RUN_TRAIL_COLOR;
+    case 'run':
+    case 'virtual-run':
       return RUN_COLOR;
-    }
-    case 'cycling':
+    case 'ride':
       return CYCLING_COLOR;
-    case 'hiking':
+    case 'hike':
       return HIKING_COLOR;
-    case 'walking':
+    case 'walk':
       return WALKING_COLOR;
-    case 'swimming':
+    case 'swim':
       return SWIMMING_COLOR;
     default:
       return MAIN_COLOR;
@@ -277,8 +299,18 @@ const geoJsonForMap = (): FeatureCollection<RPGeometry> => ({
 });
 
 const getActivitySport = (act: Activity): string => {
-  if (act.type === 'Run') {
-    if (act.subtype === 'generic') {
+  const normalizedType = normalizeActivityType(act.type, act.subtype);
+
+  if (
+    normalizedType === 'run' ||
+    normalizedType === 'trail' ||
+    normalizedType === 'treadmill' ||
+    normalizedType === 'virtual-run'
+  ) {
+    if (normalizedType === 'trail') return ACTIVITY_TYPES.RUN_TRAIL_TITLE;
+    if (normalizedType === 'treadmill') return ACTIVITY_TYPES.RUN_TREADMILL_TITLE;
+    if (normalizedType === 'virtual-run') return ACTIVITY_TYPES.RUN_GENERIC_TITLE;
+    if (act.subtype === 'generic' || act.subtype === 'Run' || !act.subtype) {
       const runDistance = act.distance / 1000;
       if (runDistance > 20 && runDistance < 40) {
         return RUN_TITLES.HALF_MARATHON_RUN_TITLE;
@@ -286,20 +318,18 @@ const getActivitySport = (act: Activity): string => {
         return RUN_TITLES.FULL_MARATHON_RUN_TITLE;
       }
       return ACTIVITY_TYPES.RUN_GENERIC_TITLE;
-    } else if (act.subtype === 'trail') return ACTIVITY_TYPES.RUN_TRAIL_TITLE;
-    else if (act.subtype === 'treadmill')
-      return ACTIVITY_TYPES.RUN_TREADMILL_TITLE;
-    else return ACTIVITY_TYPES.RUN_GENERIC_TITLE;
-  } else if (act.type === 'hiking') {
+    }
+    return ACTIVITY_TYPES.RUN_GENERIC_TITLE;
+  } else if (normalizedType === 'hike') {
     return ACTIVITY_TYPES.HIKING_TITLE;
-  } else if (act.type === 'cycling') {
+  } else if (normalizedType === 'ride') {
     return ACTIVITY_TYPES.CYCLING_TITLE;
-  } else if (act.type === 'walking') {
+  } else if (normalizedType === 'walk') {
     return ACTIVITY_TYPES.WALKING_TITLE;
-  }
-  // if act.type contains 'skiing'
-  else if (act.type.includes('skiing')) {
+  } else if (normalizedType === 'ski') {
     return ACTIVITY_TYPES.SKIING_TITLE;
+  } else if (normalizedType === 'swim') {
+    return 'Swim';
   }
   return '';
 };
@@ -318,6 +348,16 @@ const titleForRun = (run: Activity): string => {
     }
   }
   // 3. use time+length if location or type is not available
+  const normalizedType = normalizeActivityType(run.type, run.subtype);
+  if (
+    normalizedType !== 'run' &&
+    normalizedType !== 'trail' &&
+    normalizedType !== 'treadmill' &&
+    normalizedType !== 'virtual-run'
+  ) {
+    return getActivitySport(run) || run.type;
+  }
+
   const runDistance = run.distance / 1000;
   const runHour = +run.start_date_local.slice(11, 13);
   if (runDistance > 20 && runDistance < 40) {
@@ -446,6 +486,8 @@ export {
   formatPace,
   scrollToMap,
   locationForRun,
+  normalizeActivityType,
+  getActivitySport,
   intComma,
   pathForRun,
   colorForRun,
