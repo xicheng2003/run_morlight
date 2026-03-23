@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { Suspense, lazy, useMemo, useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } from 'recharts';
-import activities from '@/static/activities.json';
 import { ACTIVITY_TOTAL, IS_CHINESE } from "@/utils/const";
-import MonthOfLife from '../Charts/MonthOfLife';
+import useActivities from '@/hooks/useActivities';
+
+const MonthOfLife = lazy(() => import('../Charts/MonthOfLife'));
 
 // Define interfaces for our data structures
 interface Activity {
@@ -50,6 +51,12 @@ interface ActivityGroups {
 }
 
 type IntervalType = 'year' | 'month' | 'week' | 'day' | 'life';
+
+const SummaryFallback = ({ label }: { label: string }) => (
+    <div className="w-full rounded-[3rem] border border-white/6 bg-white/[0.03] p-10 text-center text-sm font-semibold uppercase tracking-[0.18em] text-white/40">
+        {label}
+    </div>
+);
 
 const ActivityCard: React.FC<ActivityCardProps> = ({ period, summary, dailyDistances, interval }) => {
     const generateLabels = (): number[] => {
@@ -173,6 +180,7 @@ const ActivityCard: React.FC<ActivityCardProps> = ({ period, summary, dailyDista
 };
 
 const ActivityList: React.FC = () => {
+    const { activities, isLoading } = useActivities();
     const [interval, setInterval] = useState<IntervalType>('month');
 
     const toggleInterval = (newInterval: IntervalType): void => {
@@ -188,7 +196,7 @@ const ActivityList: React.FC = () => {
         return hours * 3600 + minutes * 60 + seconds;
     };
 
-    const activitiesByInterval = React.useMemo(() => {
+    const activitiesByInterval = useMemo(() => {
         return (activities as Activity[]).filter(filterActivities).reduce((acc: ActivityGroups, activity) => {
             const date = new Date(activity.start_date_local);
             let key: string;
@@ -246,7 +254,27 @@ const ActivityList: React.FC = () => {
 
             return acc;
         }, {});
-    }, [interval]);
+    }, [activities, interval]);
+
+    if (isLoading) {
+        return (
+            <div className="w-full max-w-7xl mx-auto px-6 text-white min-h-screen">
+                <div className="section-shell mt-10">
+                    <div className="section-shell__header">
+                        <span className="section-shell__eyebrow">Loading</span>
+                        <h1 className="section-shell__title">
+                            {IS_CHINESE ? '正在准备活动概览' : 'Preparing activity summary'}
+                        </h1>
+                    </div>
+                    <p className="text-base leading-7 text-white/58">
+                        {IS_CHINESE
+                            ? '活动数据正在异步加载中，稍后图表和月历视图会自动出现。'
+                            : 'Activity data is loading asynchronously. Charts will appear automatically in a moment.'}
+                    </p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="w-full max-w-7xl mx-auto px-6 text-white min-h-screen">
@@ -283,9 +311,11 @@ const ActivityList: React.FC = () => {
 
             {/* Life SVG View */}
             {interval === 'life' && (
-                <div className="w-full rounded-[3rem] bg-white/[0.02] border border-white/5 p-4 sm:p-8 backdrop-blur-xl flex justify-center shadow-2xl">
-                    <MonthOfLife />
-                </div>
+                <Suspense fallback={<SummaryFallback label="Loading life view" />}>
+                    <div className="w-full rounded-[3rem] bg-white/[0.02] border border-white/5 p-4 sm:p-8 backdrop-blur-xl flex justify-center shadow-2xl">
+                        <MonthOfLife />
+                    </div>
+                </Suspense>
             )}
 
             {/* Data Cards Grid */}

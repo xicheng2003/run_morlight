@@ -13,6 +13,20 @@ img::-moz-selection {
 :root {
   --brand: #ffa630;
   --bg: #050505;
+  --bg-elevated: rgba(10, 10, 10, 0.76);
+  --bg-panel: rgba(255, 255, 255, 0.04);
+  --bg-panel-strong: rgba(255, 255, 255, 0.06);
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.14);
+  --text-primary: rgba(255, 255, 255, 0.96);
+  --text-secondary: rgba(255, 255, 255, 0.68);
+  --text-muted: rgba(255, 255, 255, 0.4);
+  --accent-soft: rgba(255, 166, 48, 0.12);
+  --accent-border: rgba(255, 166, 48, 0.22);
+  --accent-strong: #ffa630;
+  --surface-shadow: 0 50px 100px -20px rgba(0, 0, 0, 0.9);
+  --display-font: "Avenir Next Condensed", "Arial Narrow", "Franklin Gothic Medium", sans-serif;
+  --body-font: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
 }
 
 html {
@@ -25,8 +39,23 @@ body {
   -moz-osx-font-smoothing: grayscale;
   -webkit-font-smoothing: antialiased;
   background-color: var(--bg);
-  color: white;
+  color: var(--text-primary);
+  font-family: var(--body-font);
   overflow-x: hidden;
+}
+
+a,
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent-strong);
+  outline-offset: 3px;
+}
+
+#root {
+  min-height: 100vh;
 }
 
 /* Custom Minimalist Scrollbar */
@@ -80,4 +109,183 @@ hr {
   font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
+}
+
+.display-title {
+  font-family: var(--display-font);
+  font-size: clamp(3.5rem, 7vw, 7rem);
+  font-style: italic;
+  font-weight: 900;
+  letter-spacing: -0.06em;
+  line-height: 0.92;
+  text-transform: uppercase;
+}
+
+.page-content-shell {
+  position: relative;
+  z-index: 30;
+  width: 100%;
+  color: var(--text-primary);
+}
+
+.page-stack {
+  width: 100%;
+  max-width: 88rem;
+  padding: 0 1.5rem 6rem;
+}
+
+.section-shell {
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  border-radius: 2rem;
+  background:
+    radial-gradient(circle at top left, rgba(255, 166, 48, 0.08), transparent 30%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.02));
+  box-shadow: var(--surface-shadow);
+  backdrop-filter: blur(40px);
+  padding: 1.75rem;
+}
+
+.section-shell__header {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.section-shell__eyebrow {
+  display: inline-block;
+  margin-bottom: 0.25rem;
+  color: var(--accent-strong);
+  font-family: var(--display-font);
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+}
+
+.section-shell__title {
+  font-family: var(--display-font);
+  font-size: clamp(2rem, 4.4vw, 4.5rem);
+  font-style: italic;
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  line-height: 0.95;
+  text-transform: uppercase;
+}
+
+.panel-surface {
+  border: 1px solid var(--border-subtle);
+  border-radius: 1.75rem;
+  background: linear-gradient(180deg, var(--bg-panel-strong), rgba(255, 255, 255, 0.025));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  padding: 1.5rem;
+  backdrop-filter: blur(28px);
+}
+
+.panel-surface--hero {
+  min-height: 100%;
+}
+
+.panel-surface--compact {
+  min-height: 12rem;
+}
+
+.panel-surface--accent {
+  border-color: var(--accent-border);
+  background:
+    radial-gradient(circle at top right, rgba(255, 166, 48, 0.18), transparent 36%),
+    linear-gradient(180deg, rgba(255, 166, 48, 0.1), rgba(255, 255, 255, 0.03));
+}
+
+.metric-card {
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 1.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 1rem 1.1rem;
+}
+
+.metric-card__label {
+  color: var(--text-muted);
+  font-family: var(--display-font);
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+
+.metric-card__value {
+  display: block;
+  margin-top: 0.75rem;
+  color: var(--accent-strong);
+  font-family: var(--display-font);
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-style: italic;
+  font-weight: 900;
+  letter-spacing: -0.06em;
+  line-height: 0.95;
+}
+
+.metric-card__value--small {
+  font-size: clamp(1.65rem, 3vw, 2.4rem);
+}
+
+.metric-card__hint {
+  margin-top: 0.5rem;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.tag-chip {
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.7);
+  font-family: var(--display-font);
+  font-size: 0.72rem;
+  font-style: italic;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  padding: 0.55rem 0.95rem;
+  text-transform: uppercase;
+}
+
+.subtle-status {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1.25rem;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-secondary);
+  padding: 1rem 1.1rem;
+}
+
+@media (min-width: 640px) {
+  .page-stack {
+    padding-left: 1.75rem;
+    padding-right: 1.75rem;
+  }
+
+  .section-shell {
+    border-radius: 3rem;
+    padding: 2.5rem;
+  }
+
+  .section-shell__header {
+    margin-bottom: 2.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

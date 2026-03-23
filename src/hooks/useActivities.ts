@@ -1,56 +1,48 @@
-import { locationForRun, titleForRun, pathForRun, colorForRun, ProcessedActivity } from '@/utils/utils';
-import activitiesData from '@/static/activities.json';
-
-const activities = (activitiesData as any[]).map((run) => {
-  const path = pathForRun(run);
-  const color = colorForRun(run);
-  return {
-    ...run,
-    path,
-    color,
-  } as ProcessedActivity;
-});
+import { useEffect, useMemo, useState } from 'react';
+import {
+  buildActivityMeta,
+  getCachedProcessedActivities,
+  loadProcessedActivities,
+} from '@/data/activities';
+import type { ProcessedActivity } from '@/utils/utils';
 
 const useActivities = () => {
-  const cities: Record<string, number> = {};
-  const runPeriod: Record<string, number> = {};
-  const provinces: Set<string> = new Set();
-  const countries: Set<string> = new Set();
-  let years: Set<string> = new Set();
-  let thisYear = '';
+  const [activities, setActivities] = useState<ProcessedActivity[]>(
+    () => getCachedProcessedActivities() ?? []
+  );
+  const [isLoading, setIsLoading] = useState(!getCachedProcessedActivities());
+  const [error, setError] = useState<string | null>(null);
 
-  activities.forEach((run) => {
-    const location = locationForRun(run);
+  useEffect(() => {
+    let cancelled = false;
 
-    const periodName = titleForRun(run);
-    if (periodName) {
-      runPeriod[periodName] = runPeriod[periodName]
-        ? runPeriod[periodName] + 1
-        : 1;
-    }
+    loadProcessedActivities()
+      .then((loadedActivities) => {
+        if (!cancelled) {
+          setActivities(loadedActivities);
+          setIsLoading(false);
+          setError(null);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setActivities([]);
+          setIsLoading(false);
+          setError('Activity data could not be loaded.');
+        }
+      });
 
-    const { city, province, country } = location;
-    // drop only one char city
-    if (city.length > 1) {
-      cities[city] = cities[city] ? cities[city] + run.distance : run.distance;
-    }
-    if (province) provinces.add(province);
-    if (country) countries.add(country);
-    const year = run.start_date_local.slice(0, 4);
-    years.add(year);
-  });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
-  let yearsArray = [...years].sort().reverse();
-  if (years) [thisYear] = yearsArray; // set current year as first one of years array
+  const meta = useMemo(() => buildActivityMeta(activities), [activities]);
 
   return {
-    activities,
-    years: yearsArray,
-    countries: [...countries],
-    provinces: [...provinces],
-    cities,
-    runPeriod,
-    thisYear,
+    ...meta,
+    error,
+    isLoading,
   };
 };
 

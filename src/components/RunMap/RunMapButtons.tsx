@@ -9,14 +9,17 @@ const RunMapButtons = ({ changeYear, thisYear }: { changeYear: (_year: string) =
   return (
     <ul className={styles.buttons}>
       {yearsButtons.map((year) => (
-        <li
-          key={`${year}button`}
-          className={styles.button + ` ${year === thisYear ? styles.selected : ''}`}
-          onClick={() => {
-            changeYear(year);
-          }}
-        >
-          {year}
+        <li key={`${year}button`}>
+          <button
+            type="button"
+            className={styles.button + ` ${year === thisYear ? styles.selected : ''}`}
+            onClick={() => {
+              changeYear(year);
+            }}
+            aria-pressed={year === thisYear}
+          >
+            {year}
+          </button>
         </li>
       ))}
     </ul>

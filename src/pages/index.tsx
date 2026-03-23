@@ -1,14 +1,12 @@
-import { useEffect, useState, useRef } from 'react';
+import { Suspense, lazy, useEffect, useState, useRef } from 'react';
 import { Analytics } from '@vercel/analytics/react';
 import Layout from '@/components/Layout';
-import LocationStat from '@/components/LocationStat';
-import RunMap from '@/components/RunMap';
-import RunTable from '@/components/RunTable';
-import SVGStat from '@/components/SVGStat';
-import YearsStat from '@/components/YearsStat';
+import ExploreSection from '@/components/Home/ExploreSection';
+import HeroSection from '@/components/Home/HeroSection';
+import SeasonOverviewSection from '@/components/Home/SeasonOverviewSection';
+import RunMapPreview from '@/components/RunMap/RunMapPreview';
 import useActivities from '@/hooks/useActivities';
 import useSiteMetadata from '@/hooks/useSiteMetadata';
-import { IS_CHINESE, LATEST_RACE_EVENT } from '@/utils/const';
 import {
   Activity,
   IViewState,
@@ -24,16 +22,20 @@ import {
   RunIds,
 } from '@/utils/utils';
 
+const RunMap = lazy(() => import('@/components/RunMap'));
+
 const Index = () => {
   const { siteTitle } = useSiteMetadata();
-  const { activities, thisYear } = useActivities();
+  const { activities, cities, thisYear, isLoading, error } = useActivities();
   const [year, setYear] = useState(thisYear);
   const [runIndex, setRunIndex] = useState(-1);
   const [runs, setActivity] = useState(
     filterAndSortRuns(activities, year, filterYearRuns, sortDateFunc)
   );
   const [title, setTitle] = useState('');
+  const [activeFilterLabel, setActiveFilterLabel] = useState(`${thisYear} Season`);
   const [geoData, setGeoData] = useState(geoJsonForRuns(runs));
+  const [shouldMountMap, setShouldMountMap] = useState(false);
 
   // Custom logic to get bounds for ONLY the latest run to prevent extreme zoom outs
   const getLatestBounds = (currentRuns: Activity[]) => {
@@ -84,6 +86,39 @@ const Index = () => {
     (new Date().getTime() - lastRunDate.getTime()) / (1000 * 3600 * 24)
   );
 
+  useEffect(() => {
+    if (shouldMountMap) {
+      return;
+    }
+
+    const idleCallback = window.requestIdleCallback?.(() => {
+      setShouldMountMap(true);
+    });
+    const timeoutId = window.setTimeout(() => {
+      setShouldMountMap(true);
+    }, 1800);
+
+    return () => {
+      if (idleCallback) {
+        window.cancelIdleCallback?.(idleCallback);
+      }
+      window.clearTimeout(timeoutId);
+    };
+  }, [shouldMountMap]);
+
+  useEffect(() => {
+    if (!thisYear) {
+      return;
+    }
+
+    const nextRuns = filterAndSortRuns(activities, thisYear, filterYearRuns, sortDateFunc);
+    setYear(thisYear);
+    setActivity(nextRuns);
+    setGeoData(geoJsonForRuns(nextRuns));
+    setActiveFilterLabel(`${thisYear} Season`);
+    setViewState({ ...getLatestBounds(nextRuns) });
+  }, [thisYear, activities]);
+
   const changeByItem = (
     item: string,
     name: string,
@@ -97,6 +132,7 @@ const Index = () => {
     setActivity(newRuns);
     setRunIndex(-1);
     setTitle(`${item} ${name} Running Heatmap`);
+    setActiveFilterLabel(name === 'Year' ? `${item} Season` : `${name}: ${item}`);
     setViewState({ ...getLatestBounds(newRuns) });
   };
 
@@ -165,14 +201,32 @@ const Index = () => {
           className="relative h-full w-full transition-all duration-500 ease-out"
           style={mapStyle}
         >
-          <RunMap
-            title={title}
-            viewState={viewState}
-            geoData={geoData}
-            setViewState={setViewState}
-            changeYear={changeYear}
-            thisYear={year}
-          />
+          {shouldMountMap ? (
+            <Suspense
+              fallback={
+                <RunMapPreview
+                  runCount={runs.length}
+                  year={year}
+                  onActivate={() => setShouldMountMap(true)}
+                />
+              }
+            >
+              <RunMap
+                title={title}
+                viewState={viewState}
+                geoData={geoData}
+                setViewState={setViewState}
+                changeYear={changeYear}
+                thisYear={year}
+              />
+            </Suspense>
+          ) : (
+            <RunMapPreview
+              runCount={runs.length}
+              year={year}
+              onActivate={() => setShouldMountMap(true)}
+            />
+          )}
           <div
             className="pointer-events-none absolute inset-0 z-10 transition-opacity duration-700"
             style={{
@@ -188,205 +242,66 @@ const Index = () => {
       </div>
 
       <div className="pointer-events-none relative z-30 w-full text-white">
-        <section className={`${isMobile ? 'h-[45vh]' : 'h-[80vh]'} w-full relative`} />
-        
-        {isMobile && progress < 0.1 && (
-          <div 
-            onClick={scrollToBio}
-            className="pointer-events-auto fixed bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 cursor-pointer animate-bounce group z-50"
-          >
-            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40 group-hover:text-brand transition-colors">Explore Stats</span>
-            <div className="h-8 w-px bg-gradient-to-b from-brand to-transparent" />
-            <svg 
-              className="w-4 h-4 text-brand" 
-              fill="none" 
-              viewBox="0 0 24 24" 
-              stroke="currentColor"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
-            </svg>
-          </div>
-        )}
+        <HeroSection
+          siteTitle={siteTitle}
+          isMobile={isMobile}
+          progress={progress}
+          bioRef={bioRef}
+          lastRun={lastRun}
+          daysAgo={daysAgo}
+          totalRuns={activities.length}
+          cityCount={Object.keys(cities).length}
+          yearCount={new Set(activities.map((run) => run.start_date_local.slice(0, 4))).size}
+          onScrollToBio={scrollToBio}
+        />
 
-        <section ref={bioRef} className="relative flex flex-col items-center">
-          <div
-            className="mb-24 flex w-full max-w-5xl flex-col gap-12 px-8 transition-all duration-1000 ease-out"
-            style={{
-              opacity: progress,
-              transform: `translateY(${(1 - progress) * 100}px)`,
-            }}
-          >
-            <div className="flex flex-col gap-2">
-              <span className="drop-shadow-glow text-xs font-black uppercase tracking-[0.5em] text-brand">
-                AuraDawn&apos;s
-              </span>
-              <h1 className="text-5xl font-black uppercase italic leading-none tracking-tighter sm:text-7xl">
-                {siteTitle}
-              </h1>
-            </div>
-
-            <div className="grid grid-cols-1 gap-12 md:grid-cols-2">
-              <div className="space-y-8">
-                <p className="text-justify text-xl font-bold italic leading-snug text-white/90 sm:text-2xl">
-                  {IS_CHINESE
-                    ? '在城市的脉络中，用呼吸测量大地的广度。每一次奔跑，都是一场关于自我的探索与重塑。'
-                    : 'Measuring the earth with every breath. Each run is a journey of self-discovery and transformation.'}
+        <section className="mx-auto flex w-full justify-center">
+          <div className="page-stack space-y-12 sm:space-y-16">
+            {error ? (
+              <div className="section-shell pointer-events-auto">
+                <div className="section-shell__header">
+                  <span className="section-shell__eyebrow">Load Error</span>
+                  <h2 className="section-shell__title">Activity archive unavailable</h2>
+                </div>
+                <p className="text-base leading-7 text-white/58">
+                  活动数据暂时没有成功加载，地图与统计区会在数据恢复后自动显示。
                 </p>
-                <div className="flex flex-wrap gap-3">
-                  {[
-                    'Marathoner',
-                    'Tech Enthusiast',
-                    'Urban Explorer',
-                    '5AM Club',
-                  ].map((tag) => (
-                    <span
-                      key={tag}
-                      className="rounded-full border border-white/5 bg-white/[0.03] px-3 py-1 text-[10px] font-black uppercase italic tracking-widest text-white/40"
-                    >
-                      {tag}
-                    </span>
-                  ))}
+              </div>
+            ) : null}
+
+            {isLoading ? (
+              <div className="section-shell pointer-events-auto">
+                <div className="section-shell__header">
+                  <span className="section-shell__eyebrow">Loading</span>
+                  <h2 className="section-shell__title">Preparing activity archive</h2>
                 </div>
+                <p className="text-base leading-7 text-white/58">
+                  正在加载活动数据与统计视图，首次打开会稍慢一些，之后会明显更快。
+                </p>
               </div>
-
-              <div className="flex flex-col gap-6">
-                {/* 1. Latest Pulse */}
-                <div className="flex flex-col justify-between rounded-3xl border border-white/5 bg-white/[0.02] p-6 shadow-xl backdrop-blur-sm transition-colors hover:bg-white/[0.04]">
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-1">
-                      <span className="text-[8px] font-black uppercase tracking-widest text-white/30">
-                        Latest Pulse
-                      </span>
-                      <h4 className="text-sm font-bold italic text-white/80">
-                        {daysAgo === 0 ? '就在今天' : `${daysAgo}天前`}{' '}
-                        刚刚结束一场奔跑
-                      </h4>
-                    </div>
-                    <div className="flex h-6 w-6 animate-pulse items-center justify-center rounded-lg bg-brand/10">
-                      <div className="h-1.5 w-1.5 rounded-full bg-brand shadow-[0_0_10px_rgba(255,166,48,0.8)]" />
-                    </div>
-                  </div>
-                  <div className="mt-6 flex gap-8">
-                    <div className="flex flex-col">
-                      <span className="text-2xl font-black italic tracking-tighter text-brand">
-                        {(lastRun?.distance / 1000).toFixed(1)}
-                      </span>
-                      <span className="text-[8px] font-bold uppercase tracking-widest text-white/20">
-                        KM DISTANCE
-                      </span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-2xl font-black italic tracking-tighter text-white/90">
-                        {lastRun?.average_speed
-                          ? (1000 / lastRun.average_speed / 60)
-                              .toFixed(2)
-                              .replace('.', ':')
-                          : '--'}
-                      </span>
-                      <span className="text-[8px] font-bold uppercase tracking-widest text-white/20">
-                        PACE
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 2. Milestone / Latest Race */}
-                {LATEST_RACE_EVENT && (
-                  <div className="flex flex-col justify-between rounded-3xl border border-brand/20 bg-gradient-to-br from-brand/10 to-transparent p-6 shadow-xl backdrop-blur-sm transition-colors hover:border-brand/40">
-                    <div className="flex items-start justify-between">
-                      <div className="space-y-1">
-                        <span className="text-[8px] font-black uppercase tracking-widest text-brand">
-                          Milestone Event
-                        </span>
-                        <h4 className="text-sm font-bold italic text-white/90">
-                          {LATEST_RACE_EVENT.name}
-                        </h4>
-                      </div>
-                      <div className="rounded-md bg-brand/10 px-2 py-1 text-[10px] font-bold text-brand">
-                        {LATEST_RACE_EVENT.type}
-                      </div>
-                    </div>
-                    <div className="mt-6 flex gap-8">
-                      <div className="flex flex-col">
-                        <span className="text-xl font-black italic tracking-tighter text-white">
-                          {LATEST_RACE_EVENT.pace}
-                        </span>
-                        <span className="text-[8px] font-bold uppercase tracking-widest text-white/40">
-                          AVG PACE
-                        </span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-xl font-black italic tracking-tighter text-white/70">
-                          {LATEST_RACE_EVENT.date}
-                        </span>
-                        <span className="text-[8px] font-bold uppercase tracking-widest text-white/40">
-                          DATE COMPLETED
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="pointer-events-auto mb-16 w-full max-w-7xl px-4 sm:px-6">
-            <div className="rounded-[2.5rem] border border-white/5 bg-[#0a0a0a]/40 p-6 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.9)] backdrop-blur-[80px] sm:rounded-[4rem] sm:p-20">
-              <div className="flex flex-col gap-12 sm:gap-16">
-                <header className="flex flex-col justify-between gap-8 sm:flex-row sm:items-end">
-                  <div className="flex flex-col gap-2">
-                    <span className="text-[10px] font-black uppercase tracking-[0.8em] text-brand">
-                      Current Analytics
-                    </span>
-                    <span className="text-6xl font-black italic leading-none tracking-tighter text-white">
-                      {year} Season
-                    </span>
-                  </div>
-                  <div className="mx-12 mb-4 hidden h-px flex-1 bg-gradient-to-r from-white/10 to-transparent sm:block" />
-                </header>
-                {(viewState.zoom ?? 0) <= 3 && IS_CHINESE ? (
-                  <LocationStat
-                    changeYear={changeYear}
-                    changeCity={changeCity}
-                    changeTitle={changeTitle}
-                  />
-                ) : (
-                  <YearsStat year={year} onClick={changeYear} />
-                )}
-              </div>
-            </div>
-          </div>
-
-          <section className="w-full max-w-7xl space-y-16 px-6 pb-24">
-            {year !== 'Total' && (
-              <div className="pointer-events-auto overflow-hidden rounded-[4rem] border border-white/5 bg-[#0a0a0a]/40 p-6 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.9)] backdrop-blur-[80px] sm:p-20">
-                <header className="mb-16 flex items-center gap-8 px-4">
-                  <div className="flex flex-col gap-1">
-                    <h2 className="text-2xl font-black uppercase italic tracking-[0.3em] text-white/90">
-                      {IS_CHINESE ? '详细记录' : 'Detailed Log'}
-                    </h2>
-                    <span className="text-[10px] font-bold uppercase italic tracking-[0.4em] text-white/30">
-                      Detailed Log
-                    </span>
-                  </div>
-                  <div className="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent" />
-                </header>
-                <RunTable
-                  runs={runs}
-                  locateActivity={locateActivity}
-                  setActivity={setActivity}
-                  runIndex={runIndex}
-                  setRunIndex={setRunIndex}
+            ) : null}
+            {!isLoading && !error ? (
+              <>
+                <SeasonOverviewSection
+                  year={year}
+                  zoom={viewState.zoom}
+                  onChangeYear={changeYear}
+                  onChangeCity={changeCity}
+                  onChangeTitle={changeTitle}
                 />
-              </div>
-            )}
 
-            {year === 'Total' && (
-              <div className="pointer-events-auto rounded-[4rem] bg-black/40 p-8 backdrop-blur-[80px] sm:p-24">
-                <SVGStat />
-              </div>
-            )}
-          </section>
+                <ExploreSection
+                  year={year}
+                  runs={runs}
+                  runIndex={runIndex}
+                  activeFilterLabel={activeFilterLabel}
+                  onResetFilter={() => changeYear(thisYear)}
+                  onLocateActivity={locateActivity}
+                  onSetRunIndex={setRunIndex}
+                />
+              </>
+            ) : null}
+          </div>
         </section>
       </div>
 

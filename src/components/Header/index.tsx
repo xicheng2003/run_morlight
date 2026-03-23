@@ -13,15 +13,15 @@ const Header = () => {
   }, []);
 
   return (
-    <nav 
+    <nav
       className={`fixed left-0 right-0 top-0 z-[100] transition-all duration-700 ease-in-out px-4 md:px-6 ${
         scrolled ? 'py-2 md:py-4' : 'py-4 md:py-8'
       }`}
     >
-      <div 
+      <div
         className={`mx-auto flex items-center justify-between transition-all duration-700 ${
-          scrolled 
-            ? 'max-w-4xl rounded-xl md:rounded-2xl border border-white/10 bg-[#050505] px-4 md:px-6 py-1.5 md:py-2 shadow-[0_20px_50px_rgba(0,0,0,0.5)]' 
+          scrolled
+            ? 'max-w-4xl rounded-xl md:rounded-2xl border border-white/10 bg-[#050505] px-4 md:px-6 py-1.5 md:py-2 shadow-[0_20px_50px_rgba(0,0,0,0.5)]'
             : 'max-w-7xl rounded-none border border-transparent bg-transparent px-2 md:px-4 py-0 shadow-none'
         }`}
       >
@@ -43,12 +43,12 @@ const Header = () => {
         </Link>
 
         {/* Links Section */}
-        <div className="flex gap-3 md:gap-8 items-center">
+        <div className="flex flex-wrap items-center justify-end gap-2 md:gap-6">
           {navLinks.map((n, i) => (
             <a
               key={i}
               href={n.url}
-              className={`text-[8px] md:text-[10px] font-black uppercase tracking-[0.15em] md:tracking-[0.3em] transition-all duration-500 hover:text-brand ${
+              className={`inline-flex min-h-9 items-center rounded-full px-2.5 py-1 text-[9px] md:text-[10px] font-black uppercase tracking-[0.14em] md:tracking-[0.28em] transition-all duration-500 hover:bg-white/5 hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-strong)] ${
                 scrolled ? 'text-white/40' : 'text-white/60'
               }`}
             >
@@ -62,7 +62,7 @@ const Header = () => {
       
       {/* Bottom accent line when not scrolled */}
       {!scrolled && (
-        <div className="mx-auto max-w-7xl h-px bg-gradient-to-r from-transparent via-white/5 to-transparent mt-4 animate-in fade-in duration-1000" />
+        <div className="mx-auto mt-4 h-px max-w-7xl bg-gradient-to-r from-transparent via-white/5 to-transparent animate-in fade-in duration-1000" />
       )}
     </nav>
   );

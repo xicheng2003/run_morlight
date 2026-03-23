@@ -20,7 +20,7 @@ const Layout = ({ children }: PropsWithChildren) => {
         />
       </Helmet>
       <Header />
-      <main className="relative">
+      <main className="relative isolate overflow-hidden">
         {children}
       </main>
     </div>

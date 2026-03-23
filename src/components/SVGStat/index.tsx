@@ -1,7 +1,15 @@
-import ActivityHeatmap from '../Charts/ActivityHeatmap';
-import ActivityGrid from '../Charts/ActivityGrid';
-import ActivityMetrics from '../Charts/ActivityMetrics';
-import TimePunchCard from '../Charts/TimePunchCard';
+import { Suspense, lazy } from 'react';
+
+const ActivityHeatmap = lazy(() => import('../Charts/ActivityHeatmap'));
+const ActivityGrid = lazy(() => import('../Charts/ActivityGrid'));
+const ActivityMetrics = lazy(() => import('../Charts/ActivityMetrics'));
+const TimePunchCard = lazy(() => import('../Charts/TimePunchCard'));
+
+const ChartFallback = () => (
+  <div className="rounded-[1.5rem] border border-white/6 bg-white/[0.03] px-5 py-10 text-center text-sm font-semibold tracking-[0.14em] text-white/40 uppercase">
+    Loading visualization
+  </div>
+);
 
 const SVGStat = () => (
   <div id="svgStat" className="flex flex-col gap-8 md:gap-16 py-6">
@@ -15,7 +23,9 @@ const SVGStat = () => (
           <span className="block md:inline text-[8px] md:text-[10px] font-normal text-white/20 not-italic md:ml-3 tracking-[0.3em]">SEASON ANALYTICS</span>
         </h3>
       </header>
-      <ActivityMetrics />
+      <Suspense fallback={<ChartFallback />}>
+        <ActivityMetrics />
+      </Suspense>
     </div>
 
     {/* 2. 时空节律图 (NEW) */}
@@ -29,7 +39,9 @@ const SVGStat = () => (
       </header>
       <div className="space-y-6">
         <p className="text-white/40 text-[10px] font-bold tracking-widest uppercase">活跃时间段分布 (24H x 7D)</p>
-        <TimePunchCard />
+        <Suspense fallback={<ChartFallback />}>
+          <TimePunchCard />
+        </Suspense>
       </div>
     </div>
 
@@ -42,7 +54,9 @@ const SVGStat = () => (
           <span className="block md:inline text-[8px] md:text-[10px] font-normal text-white/20 not-italic md:ml-3 tracking-[0.3em]">ACTIVITY HEATMAP</span>
         </h3>
       </header>
-      <ActivityHeatmap />
+      <Suspense fallback={<ChartFallback />}>
+        <ActivityHeatmap />
+      </Suspense>
     </div>
 
     {/* 4. 几何足迹 */}
@@ -54,7 +68,9 @@ const SVGStat = () => (
           <span className="block md:inline text-[8px] md:text-[10px] font-normal text-white/20 not-italic md:ml-3 tracking-[0.3em]">JOURNEY GEOMETRY</span>
         </h3>
       </header>
-      <ActivityGrid />
+      <Suspense fallback={<ChartFallback />}>
+        <ActivityGrid />
+      </Suspense>
     </div>
 
   </div>

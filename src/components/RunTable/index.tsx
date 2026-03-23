@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   sortDateFunc,
   sortDateFuncReverse,
@@ -14,7 +14,6 @@ import styles from './style.module.css';
 interface IRunTableProperties {
   runs: Activity[];
   locateActivity: (_runIds: RunIds) => void;
-  setActivity: (_runs: Activity[]) => void;
   runIndex: number;
   setRunIndex: (_index: number) => void;
 }
@@ -24,7 +23,6 @@ type SortFunc = (_a: Activity, _b: Activity) => number;
 const RunTable = ({
   runs,
   locateActivity,
-  setActivity,
   runIndex,
   setRunIndex,
 }: IRunTableProperties) => {
@@ -66,30 +64,74 @@ const RunTable = ({
     sortFuncMap.delete('Elevation Gain')
   }
 
-  const handleClick: React.MouseEventHandler<HTMLElement> = (e) => {
-    const funcName = (e.target as HTMLElement).innerHTML;
+  const handleClick = (funcName: string) => {
     const f = sortFuncMap.get(funcName);
 
     setRunIndex(-1);
     setSortFuncInfo(sortFuncInfo === funcName ? '' : funcName);
-    setActivity(runs.sort(f));
+    if (!f) {
+      locateActivity([]);
+    }
   };
+
+  const sortedRuns = useMemo(() => {
+    if (!sortFuncInfo) {
+      return [...runs];
+    }
+    const f = sortFuncMap.get(sortFuncInfo);
+    if (!f) {
+      return [...runs];
+    }
+    return [...runs].sort(f);
+  }, [runs, sortFuncInfo]);
+
+  const columns = Array.from(sortFuncMap.keys());
 
   return (
     <div className={styles.tableContainer}>
+      <div className={styles.tableToolbar}>
+        <div className={styles.sortPills}>
+          {columns.map((k) => {
+            const active = sortFuncInfo === k;
+            return (
+              <button
+                key={k}
+                type="button"
+                className={`${styles.sortPill} ${active ? styles.sortPillActive : ''}`}
+                onClick={() => handleClick(k)}
+              >
+                {k}
+                <span className={styles.sortIndicator}>{active ? '↑↓' : ''}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       <table className={styles.runTable} cellSpacing="0" cellPadding="0">
         <thead>
           <tr>
             <th />
-            {Array.from(sortFuncMap.keys()).map((k) => (
-              <th key={k} onClick={handleClick}>
-                {k}
+            {columns.map((k) => (
+              <th key={k}>
+                <button
+                  type="button"
+                  className={`${styles.headerButton} ${
+                    sortFuncInfo === k ? styles.headerButtonActive : ''
+                  }`}
+                  onClick={() => handleClick(k)}
+                >
+                  <span>{k}</span>
+                  <span className={styles.headerArrow}>
+                    {sortFuncInfo === k ? '↑↓' : '↕'}
+                  </span>
+                </button>
               </th>
             ))}
           </tr>
         </thead>
         <tbody>
-          {runs.map((run, elementIndex) => (
+          {sortedRuns.map((run, elementIndex) => (
             <RunRow
               key={run.run_id}
               elementIndex={elementIndex}
@@ -101,6 +143,20 @@ const RunTable = ({
           ))}
         </tbody>
       </table>
+
+      <div className={styles.mobileList}>
+        {sortedRuns.map((run, elementIndex) => (
+          <RunRow
+            key={run.run_id}
+            elementIndex={elementIndex}
+            locateActivity={locateActivity}
+            run={run}
+            runIndex={runIndex}
+            setRunIndex={setRunIndex}
+            compact
+          />
+        ))}
+      </div>
     </div>
   );
 };
