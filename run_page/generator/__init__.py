@@ -11,7 +11,6 @@ from polyline_processor import filter_out
 from .db import Activity, init_db, update_or_create_activity
 from synced_data_file_logger import save_synced_data_file_list
 
-
 IGNORE_BEFORE_SAVING = os.getenv("IGNORE_BEFORE_SAVING", False)
 
 
