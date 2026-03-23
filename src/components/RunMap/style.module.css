@@ -103,6 +103,30 @@
   color: rgba(255, 190, 190, 0.95);
 }
 
+.interactionToggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: flex-start;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.42);
+  backdrop-filter: blur(10px);
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  padding: 0.72rem 1rem;
+  text-transform: uppercase;
+  transition: all 0.2s ease;
+}
+
+.interactionToggleActive {
+  border-color: rgba(255, 166, 48, 0.28);
+  background: rgba(255, 166, 48, 0.14);
+  color: #ffa630;
+}
+
 .lights {
   position: absolute;
   bottom: 80px;

@@ -10,8 +10,10 @@ interface RunMapOverlayProps {
   lights: boolean;
   runCount: number;
   isTouchDevice: boolean;
+  interactionEnabled: boolean;
   mapError: string | null;
   onChangeYear: (_year: string) => void;
+  onToggleInteraction: () => void;
   onToggleLights: () => void;
 }
 
@@ -22,13 +24,32 @@ const RunMapOverlay = ({
   lights,
   runCount,
   isTouchDevice,
+  interactionEnabled,
   mapError,
   onChangeYear,
+  onToggleInteraction,
   onToggleLights,
 }: RunMapOverlayProps) => (
   <>
     <div className={styles.overlayStack}>
       <RunMapButtons changeYear={onChangeYear} thisYear={thisYear} />
+      {isTouchDevice ? (
+        <button
+          type="button"
+          className={`${styles.interactionToggle} ${
+            interactionEnabled ? styles.interactionToggleActive : ''
+          }`}
+          onClick={onToggleInteraction}
+        >
+          {interactionEnabled
+            ? IS_CHINESE
+              ? '关闭地图交互'
+              : 'Disable map gestures'
+            : IS_CHINESE
+              ? '启用地图交互'
+              : 'Enable map gestures'}
+        </button>
+      ) : null}
       <div className={styles.mapBadgeGroup}>
         <span className={styles.mapBadge}>
           {IS_CHINESE ? '当前记录' : 'Visible Runs'} {runCount}
@@ -38,7 +59,13 @@ const RunMapOverlay = ({
         </span>
         {isTouchDevice ? (
           <span className={styles.mapBadge}>
-            {IS_CHINESE ? '双指移动地图' : 'Use two fingers'}
+            {interactionEnabled
+              ? IS_CHINESE
+                ? '地图交互已开启'
+                : 'Map gestures enabled'
+              : IS_CHINESE
+                ? '单指可滚动页面'
+                : 'Single-finger scroll'}
           </span>
         ) : null}
         {mapError ? (

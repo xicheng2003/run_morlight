@@ -47,6 +47,7 @@ const RunMap = ({
   const [lights, setLights] = useState(PRIVACY_MODE ? false : LIGHTS_ON);
   const [mapError, setMapError] = useState<string | null>(null);
   const [isTouchDevice, setIsTouchDevice] = useState(false);
+  const [touchInteractionEnabled, setTouchInteractionEnabled] = useState(false);
 
   const isDefaultKey = MAPTILER_KEY === 'get-your-key-at-maptiler.com';
 
@@ -115,6 +116,7 @@ const RunMap = ({
   const style: React.CSSProperties = {
     width: '100%',
     height: '100%',
+    touchAction: isTouchDevice && !touchInteractionEnabled ? 'pan-y' : 'auto',
   };
   const fullscreenButton: React.CSSProperties = {
     position: 'absolute',
@@ -141,7 +143,12 @@ const RunMap = ({
   }, []);
 
   return (
-    <div className="h-full w-full overflow-hidden">
+    <div
+      className="h-full w-full overflow-hidden"
+      style={{
+        touchAction: isTouchDevice && !touchInteractionEnabled ? 'pan-y' : 'auto',
+      }}
+    >
       <Map
         {...viewState}
         onMove={onMove}
@@ -151,7 +158,10 @@ const RunMap = ({
         ref={mapRefCallback}
         onError={onMapError}
         scrollZoom={false}
-        cooperativeGestures={isTouchDevice}
+        cooperativeGestures={isTouchDevice && touchInteractionEnabled}
+        dragPan={!isTouchDevice || touchInteractionEnabled}
+        touchZoomRotate={!isTouchDevice || touchInteractionEnabled}
+        doubleClickZoom={!isTouchDevice || touchInteractionEnabled}
       >
         <RunMapOverlay
           title={title}
@@ -160,8 +170,12 @@ const RunMap = ({
           lights={lights}
           runCount={geoData.features.length}
           isTouchDevice={isTouchDevice}
+          interactionEnabled={touchInteractionEnabled}
           mapError={mapError}
           onChangeYear={changeYear}
+          onToggleInteraction={() =>
+            setTouchInteractionEnabled((current) => !current)
+          }
           onToggleLights={() => setLights((current) => !current)}
         />
         <Source id="data" type="geojson" data={mergedGeoData}>
