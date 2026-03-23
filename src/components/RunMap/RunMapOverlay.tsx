@@ -33,23 +33,6 @@ const RunMapOverlay = ({
   <>
     <div className={styles.overlayStack}>
       <RunMapButtons changeYear={onChangeYear} thisYear={thisYear} />
-      {isTouchDevice ? (
-        <button
-          type="button"
-          className={`${styles.interactionToggle} ${
-            interactionEnabled ? styles.interactionToggleActive : ''
-          }`}
-          onClick={onToggleInteraction}
-        >
-          {interactionEnabled
-            ? IS_CHINESE
-              ? '关闭地图交互'
-              : 'Disable map gestures'
-            : IS_CHINESE
-              ? '启用地图交互'
-              : 'Enable map gestures'}
-        </button>
-      ) : null}
       <div className={styles.mapBadgeGroup}>
         <span className={styles.mapBadge}>
           {IS_CHINESE ? '当前记录' : 'Visible Runs'} {runCount}
@@ -58,15 +41,21 @@ const RunMapOverlay = ({
           Zoom {(zoom ?? 0).toFixed(1)}
         </span>
         {isTouchDevice ? (
-          <span className={styles.mapBadge}>
+          <button
+            type="button"
+            className={`${styles.mapBadge} ${styles.mapBadgeButton} ${
+              interactionEnabled ? styles.interactionToggleActive : ''
+            }`}
+            onClick={onToggleInteraction}
+          >
             {interactionEnabled
               ? IS_CHINESE
-                ? '地图交互已开启'
-                : 'Map gestures enabled'
+                ? '地图交互已开启，点此关闭'
+                : 'Map gestures on'
               : IS_CHINESE
-                ? '单指可滚动页面'
+                ? '单指可滚动页面，点此启用地图交互'
                 : 'Single-finger scroll'}
-          </span>
+          </button>
         ) : null}
         {mapError ? (
           <span className={`${styles.mapBadge} ${styles.mapBadgeDanger}`}>
