@@ -15,7 +15,7 @@ const SVGStat = () => (
   <div id="svgStat" className="flex flex-col gap-8 md:gap-16 py-6">
 
     {/* 1. 核心看板 */}
-    <div className="rounded-[2rem] md:rounded-[3rem] bg-white/[0.02] p-6 md:p-10 backdrop-blur-2xl border border-white/5 shadow-2xl">
+    <div className="rounded-[2rem] md:rounded-[3rem] bg-white/[0.02] p-6 md:p-10 border border-white/5 shadow-2xl backdrop-blur-none md:backdrop-blur-2xl">
       <header className="mb-6 md:mb-10 flex items-center gap-4">
         <div className="h-6 md:h-8 w-1.5 bg-brand rounded-full shadow-[0_0_15px_rgba(255,166,48,0.4)]" />
         <h3 className="text-xl md:text-3xl font-black italic text-white uppercase tracking-tighter">
@@ -29,7 +29,7 @@ const SVGStat = () => (
     </div>
 
     {/* 2. 时空节律图 (NEW) */}
-    <div className="rounded-[2rem] md:rounded-[3rem] bg-white/[0.02] p-6 md:p-10 backdrop-blur-2xl border border-white/5 shadow-2xl">
+    <div className="rounded-[2rem] md:rounded-[3rem] bg-white/[0.02] p-6 md:p-10 border border-white/5 shadow-2xl backdrop-blur-none md:backdrop-blur-2xl">
       <header className="mb-6 md:mb-8 flex items-center gap-4">
         <div className="h-6 md:h-8 w-1.5 bg-blue-500 rounded-full shadow-[0_0_15px_rgba(59,130,246,0.4)]" />
         <h3 className="text-xl md:text-3xl font-black italic text-white uppercase tracking-tighter">
@@ -46,7 +46,7 @@ const SVGStat = () => (
     </div>
 
     {/* 3. 贡献墙 */}
-    <div className="rounded-[2rem] md:rounded-[3rem] bg-white/[0.02] p-6 md:p-10 backdrop-blur-2xl border border-white/5 shadow-2xl">
+    <div className="rounded-[2rem] md:rounded-[3rem] bg-white/[0.02] p-6 md:p-10 border border-white/5 shadow-2xl backdrop-blur-none md:backdrop-blur-2xl">
       <header className="mb-6 md:mb-8 flex items-center gap-4">
         <div className="h-6 md:h-8 w-1.5 bg-brand rounded-full" />
         <h3 className="text-xl md:text-3xl font-black italic text-white uppercase tracking-tighter">
@@ -60,7 +60,7 @@ const SVGStat = () => (
     </div>
 
     {/* 4. 几何足迹 */}
-    <div className="rounded-[2rem] md:rounded-[3rem] bg-white/[0.02] p-6 md:p-10 border border-white/5 shadow-2xl overflow-visible md:overflow-hidden backdrop-blur-xl md:backdrop-blur-2xl">
+    <div className="rounded-[2rem] md:rounded-[3rem] bg-white/[0.02] p-6 md:p-10 border border-white/5 shadow-2xl overflow-visible md:overflow-hidden backdrop-blur-none md:backdrop-blur-2xl">
       <header className="mb-6 md:mb-8 flex items-center gap-4">
         <div className="h-6 md:h-8 w-1.5 bg-brand rounded-full" />
         <h3 className="text-xl md:text-3xl font-black italic text-white uppercase tracking-tighter">
