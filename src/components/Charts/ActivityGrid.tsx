@@ -23,15 +23,35 @@ const buildNormalizedPath = (points: Array<[number, number]>) => {
   const offsetY = (scale - height) / 2;
   const innerSize = GRID_SIZE - GRID_PADDING * 2;
 
-  const normalizedPoints = points.map(([lon, lat]) => {
-    const x = ((lon - minLon + offsetX) / scale) * innerSize + GRID_PADDING;
-    const y = ((lat - minLat + offsetY) / scale) * innerSize + GRID_PADDING;
-    return [x, GRID_SIZE - y];
-  });
-
-  return normalizedPoints
-    .map(([x, y], index) => `${index === 0 ? 'M' : 'L'} ${x.toFixed(2)} ${y.toFixed(2)}`)
+  return points
+    .map(([lon, lat]) => {
+      const x = ((lon - minLon + offsetX) / scale) * innerSize + GRID_PADDING;
+      const y = ((lat - minLat + offsetY) / scale) * innerSize + GRID_PADDING;
+      return [x, GRID_SIZE - y];
+    })
+    .map(
+      ([x, y], index) =>
+        `${index === 0 ? 'M' : 'L'} ${x.toFixed(2)} ${y.toFixed(2)}`
+    )
     .join(' ');
+};
+
+const buildThumbnailUrl = (pathData: string, strokeColor: string) => {
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${GRID_SIZE} ${GRID_SIZE}" preserveAspectRatio="xMidYMid meet">
+      <path
+        d="${pathData}"
+        fill="none"
+        stroke="${strokeColor}"
+        stroke-width="3"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        vector-effect="non-scaling-stroke"
+      />
+    </svg>
+  `.trim();
+
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
 };
 
 const ActivityGrid = () => {
@@ -45,56 +65,46 @@ const ActivityGrid = () => {
           new Date(b.start_date_local).getTime() -
           new Date(a.start_date_local).getTime()
       )
-      .slice(0, 100);
-  }, [activities]);
-
-  return (
-    <div className="grid grid-cols-2 gap-3 py-6 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 md:gap-4">
-      {sortedActivities.map((activity) => {
+      .slice(0, 100)
+      .map((activity) => {
         const pathData = buildNormalizedPath(activity.path as Array<[number, number]>);
 
         if (!pathData) {
           return null;
         }
 
-        return (
-          <div
-            key={activity.run_id}
-            className="group relative aspect-square rounded-2xl border border-white/6 bg-white/[0.03] p-2.5 shadow-lg transition-colors duration-300 hover:bg-white/[0.08] md:p-3"
-            title={`${activity.name} - ${(activity.distance / 1000).toFixed(2)}km`}
-            style={{
-              transform: 'translateZ(0)',
-              backfaceVisibility: 'hidden',
-            }}
-          >
-            <svg
-              viewBox={`0 0 ${GRID_SIZE} ${GRID_SIZE}`}
-              className="h-full w-full opacity-85 md:opacity-70 md:transition-opacity md:group-hover:opacity-100"
-              preserveAspectRatio="xMidYMid meet"
-              style={{
-                transform: 'translateZ(0)',
-                backfaceVisibility: 'hidden',
-              }}
-            >
-              <path
-                d={pathData}
-                fill="none"
-                stroke={activity.color || '#ffa630'}
-                strokeWidth={3}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                vectorEffect="non-scaling-stroke"
-              />
-            </svg>
+        return {
+          ...activity,
+          thumbnailUrl: buildThumbnailUrl(pathData, activity.color || '#ffa630'),
+        };
+      })
+      .filter(Boolean);
+  }, [activities]);
 
-            <div className="pointer-events-none absolute inset-x-2 bottom-2 rounded-full bg-black/55 px-2 py-1 text-center opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
-              <span className="text-[10px] font-black text-white">
-                {(activity.distance / 1000).toFixed(1)} km
-              </span>
-            </div>
+  return (
+    <div className="grid grid-cols-2 gap-3 py-6 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 md:gap-4">
+      {sortedActivities.map((activity) => (
+        <div
+          key={activity!.run_id}
+          className="group relative aspect-square rounded-2xl border border-white/6 bg-white/[0.03] p-2.5 shadow-lg transition-colors duration-300 hover:bg-white/[0.08] md:p-3"
+          title={`${activity!.name} - ${(activity!.distance / 1000).toFixed(2)}km`}
+        >
+          <img
+            src={activity!.thumbnailUrl}
+            alt={activity!.name}
+            className="h-full w-full opacity-85 md:opacity-70 md:transition-opacity md:group-hover:opacity-100"
+            loading="lazy"
+            decoding="async"
+            draggable={false}
+          />
+
+          <div className="pointer-events-none absolute inset-x-2 bottom-2 rounded-full bg-black/55 px-2 py-1 text-center opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
+            <span className="text-[10px] font-black text-white">
+              {(activity!.distance / 1000).toFixed(1)} km
+            </span>
           </div>
-        );
-      })}
+        </div>
+      ))}
     </div>
   );
 };
