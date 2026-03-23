@@ -88,17 +88,12 @@ const Index = () => {
     bioRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const mapStyle = isMobile
-    ? {
-        opacity: 1 - progress * 0.35,
-        pointerEvents: progress > 0.1 ? 'none' : ('auto' as any),
-      }
-    : {
-        transform: `scale(${1 - progress * 0.05})`,
-        filter: `blur(${progress * 15}px)`,
-        opacity: 1 - progress * 0.5,
-        pointerEvents: progress > 0.1 ? 'none' : ('auto' as any),
-      };
+  const mapStyle = {
+    transform: `scale(${1 - progress * 0.05})`,
+    filter: `blur(${progress * 15}px)`,
+    opacity: 1 - progress * 0.5,
+    pointerEvents: progress > 0.1 ? 'none' : ('auto' as any),
+  };
 
   const lastRun = [...activities].sort(sortDateFunc)[0];
   const today = new Date();
