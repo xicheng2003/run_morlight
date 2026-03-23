@@ -46,8 +46,25 @@ const RunMap = ({
   const mapRef = useRef<MapRef | null>(null);
   const [lights, setLights] = useState(PRIVACY_MODE ? false : LIGHTS_ON);
   const [mapError, setMapError] = useState<string | null>(null);
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
 
   const isDefaultKey = MAPTILER_KEY === 'get-your-key-at-maptiler.com';
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(pointer: coarse)');
+    const updateTouchDevice = () => {
+      setIsTouchDevice(mediaQuery.matches || window.innerWidth < 768);
+    };
+
+    updateTouchDevice();
+    mediaQuery.addEventListener?.('change', updateTouchDevice);
+    window.addEventListener('resize', updateTouchDevice);
+
+    return () => {
+      mediaQuery.removeEventListener?.('change', updateTouchDevice);
+      window.removeEventListener('resize', updateTouchDevice);
+    };
+  }, []);
 
   const mapRefCallback = useCallback(
     (ref: MapRef) => {
@@ -134,6 +151,7 @@ const RunMap = ({
         ref={mapRefCallback}
         onError={onMapError}
         scrollZoom={false}
+        cooperativeGestures={isTouchDevice}
       >
         <RunMapOverlay
           title={title}
@@ -141,6 +159,7 @@ const RunMap = ({
           zoom={viewState.zoom}
           lights={lights}
           runCount={geoData.features.length}
+          isTouchDevice={isTouchDevice}
           mapError={mapError}
           onChangeYear={changeYear}
           onToggleLights={() => setLights((current) => !current)}
