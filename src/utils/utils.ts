@@ -64,7 +64,15 @@ const normalizeActivityType = (type = '', subtype = ''): string => {
 
   if (raw === 'ride' || raw === 'cycling' || raw === 'bike') return 'ride';
   if (raw === 'walk' || raw === 'walking') return 'walk';
-  if (raw === 'hike' || raw === 'hiking') return 'hike';
+  if (
+    raw === 'hike' ||
+    raw === 'hiking' ||
+    raw === 'mountaineering' ||
+    raw === 'mountain_climbing' ||
+    raw === 'mountain-climbing'
+  ) {
+    return 'hike';
+  }
   if (raw === 'swim' || raw === 'swimming') return 'swim';
   if (raw.includes('ski')) return 'ski';
 

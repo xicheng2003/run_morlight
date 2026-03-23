@@ -60,13 +60,21 @@ const ActivityGrid = () => {
         return (
           <div
             key={activity.run_id}
-            className="group relative aspect-square rounded-2xl border border-white/6 bg-white/[0.03] p-2.5 shadow-lg transition-all duration-500 hover:bg-white/[0.08] md:p-3"
+            className="group relative aspect-square rounded-2xl border border-white/6 bg-white/[0.03] p-2.5 shadow-lg transition-colors duration-300 hover:bg-white/[0.08] md:p-3"
             title={`${activity.name} - ${(activity.distance / 1000).toFixed(2)}km`}
+            style={{
+              transform: 'translateZ(0)',
+              backfaceVisibility: 'hidden',
+            }}
           >
             <svg
               viewBox={`0 0 ${GRID_SIZE} ${GRID_SIZE}`}
-              className="h-full w-full opacity-70 transition-opacity group-hover:opacity-100"
+              className="h-full w-full opacity-85 md:opacity-70 md:transition-opacity md:group-hover:opacity-100"
               preserveAspectRatio="xMidYMid meet"
+              style={{
+                transform: 'translateZ(0)',
+                backfaceVisibility: 'hidden',
+              }}
             >
               <path
                 d={pathData}
@@ -75,6 +83,7 @@ const ActivityGrid = () => {
                 strokeWidth={3}
                 strokeLinecap="round"
                 strokeLinejoin="round"
+                vectorEffect="non-scaling-stroke"
               />
             </svg>
 

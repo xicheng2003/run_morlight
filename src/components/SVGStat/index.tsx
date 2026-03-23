@@ -60,7 +60,7 @@ const SVGStat = () => (
     </div>
 
     {/* 4. 几何足迹 */}
-    <div className="rounded-[2rem] md:rounded-[3rem] bg-white/[0.02] p-6 md:p-10 backdrop-blur-2xl border border-white/5 shadow-2xl overflow-hidden">
+    <div className="rounded-[2rem] md:rounded-[3rem] bg-white/[0.02] p-6 md:p-10 border border-white/5 shadow-2xl overflow-visible md:overflow-hidden backdrop-blur-xl md:backdrop-blur-2xl">
       <header className="mb-6 md:mb-8 flex items-center gap-4">
         <div className="h-6 md:h-8 w-1.5 bg-brand rounded-full" />
         <h3 className="text-xl md:text-3xl font-black italic text-white uppercase tracking-tighter">
